@@ -4,164 +4,138 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>Nebula OS v4.0</title>
+    <title>Aetheris Nexus OS</title>
     <style>
         :root {
-            --accent: #00d2ff;
-            --bg: #050505;
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: rgba(0, 210, 255, 0.3);
+            --accent: var(--tg-theme-button-color, #00d2ff);
+            --bg: var(--tg-theme-bg-color, #050505);
+            --text: var(--tg-theme-text-color, #ffffff);
+            --sec-bg: var(--tg-theme-secondary-bg-color, #1a1a1a);
+            --border: rgba(0, 210, 255, 0.2);
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            background-color: var(--bg);
-            color: white;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-            padding-bottom: 100px;
-            background: radial-gradient(circle at center, #0a192f 0%, #000 100%);
+            background-color: var(--bg); color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding-bottom: 100px; overflow-x: hidden;
         }
-        /* Анимированный фон звезд */
-       .stars-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; overflow: hidden;
-        }
-       .star {
-            position: absolute; background: white; border-radius: 50%;
-            opacity: 0.5; animation: move linear infinite;
-        }
-        @keyframes move { from { transform: translateY(0); } to { transform: translateY(100vh); } }
+        /* Анимация частиц на фоне */
+        #particles-js { position: fixed; width: 100%; height: 100%; z-index: -1; opacity: 0.3; }
+        
+       .header { padding: 30px 20px; text-align: center; background: linear-gradient(to bottom, var(--sec-bg), transparent); }
+       .header h1 { margin: 0; font-size: 1.8rem; letter-spacing: 4px; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
+        
+        /* Навигация */
+       .nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; background: var(--sec-bg); sticky: top; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
+       .nav-item { padding: 15px 5px; text-align: center; font-size: 0.7rem; font-weight: bold; color: #888; cursor: pointer; transition: 0.3s; }
+       .nav-item.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: rgba(0, 210, 255, 0.05); }
 
-       .header {
-            padding: 25px 20px;
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-            text-align: center;
-        }
-       .header h1 { margin: 0; font-size: 1.5rem; letter-spacing: 3px; color: var(--accent); text-shadow: 0 0 15px var(--accent); }
+       .view { display: none; padding: 20px; animation: slideIn 0.4s ease; }
+       .view.active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
-       .nav-scroller {
-            display: flex; overflow-x: auto; background: rgba(0,0,0,0.8);
-            sticky: top; top: 0; z-index: 100; border-bottom: 1px solid var(--border);
-        }
-       .nav-item {
-            padding: 15px 25px; white-space: nowrap; cursor: pointer;
-            color: #888; font-weight: bold; transition: 0.3s; font-size: 0.9rem;
-        }
-       .nav-item.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: rgba(0,210,255,0.1); }
+        /* Карточки */
+       .card { background: var(--sec-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 15px; position: relative; overflow: hidden; }
+       .card h3 { margin: 0 0 10px 0; font-size: 1.1rem; color: var(--accent); }
+       .card p { margin: 0; font-size: 0.85rem; opacity: 0.8; line-height: 1.5; }
 
-       .content-section { display: none; padding: 20px; animation: fadeIn 0.5s ease; }
-       .content-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Прогресс-бары */
+       .progress-container { background: #000; height: 8px; border-radius: 4px; margin: 15px 0; overflow: hidden; }
+       .progress-bar { background: var(--accent); height: 100%; width: 0%; transition: 1s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
 
-       .card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            transition: 0.3s;
-        }
-       .card:active { transform: scale(0.97); background: rgba(0,210,255,0.05); }
-       .card h3 { margin: 0 0 10px 0; color: var(--accent); display: flex; align-items: center; justify-content: space-between; }
-       .card p { margin: 0; font-size: 0.85rem; color: #ccc; line-height: 1.4; }
+        /* Сетка магазина */
+       .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+       .shop-item { background: var(--sec-bg); border-radius: 12px; padding: 15px; text-align: center; border: 1px solid transparent; transition: 0.3s; }
+       .shop-item.selected { border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
+       .price-tag { display: block; margin-top: 10px; font-weight: bold; color: var(--accent); }
 
-       .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-       .stat-box { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-       .stat-val { display: block; font-size: 1.2rem; font-weight: bold; color: var(--accent); }
-       .stat-label { font-size: 0.7rem; color: #777; text-transform: uppercase; }
+        /* Кнопки действий */
+       .btn-main { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--accent); color: #000; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+       .btn-main:active { transform: scale(0.96); }
 
-       .btn-action {
-            width: 100%; padding: 12px; margin-top: 15px;
-            background: transparent; border: 1px solid var(--accent);
-            color: var(--accent); border-radius: 8px; cursor: pointer;
-            font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
-        }
-       .btn-action:hover { background: var(--accent); color: black; }
+        /* Терминал */
+       .terminal { background: #000; color: #0f0; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.8rem; height: 150px; overflow-y: auto; border: 1px solid #0f0; }
 
-       .footer-status {
-            position: fixed; bottom: 0; width: 100%; padding: 10px 20px;
-            background: rgba(0,0,0,0.9); border-top: 1px solid var(--border);
-            display: flex; justify-content: space-between; font-size: 0.7rem; color: #555;
-        }
-       .badge { padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; margin-left: 5px; }
-       .badge-danger { background: #ff4b2b; color: white; }
-       .badge-success { background: #2ecc71; color: white; }
-
-        /* Специальные элементы для карты */
-       .map-item { border-left: 3px solid var(--accent); padding-left: 15px; margin: 15px 0; }
+       .footer { position: fixed; bottom: 0; width: 100%; padding: 15px 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+       .balance { font-weight: bold; color: var(--accent); }
     </style>
 </head>
 <body>
-    <div class="stars-container" id="stars"></div>
-    
+    <div id="particles-js"></div>
     <div class="header">
-        <h1>NEBULA COMMAND</h1>
-        <div id="user-welcome" style="font-size: 0.8rem; margin-top: 5px; opacity: 0.7;"></div>
+        <h1 id="main-title">AETHERIS NEXUS</h1>
+        <p id="user-status" style="font-size: 0.8rem; opacity: 0.6; margin-top: 5px;">Инициализация...</p>
     </div>
 
-    <div class="nav-scroller">
-        <div class="nav-item active" onclick="tab('dash')">ОБЗОР</div>
-        <div class="nav-item" onclick="tab('map')">КАРТА СЕКТОРОВ</div>
-        <div class="nav-item" onclick="tab('cargo')">АРСЕНАЛ</div>
-        <div class="nav-item" onclick="tab('missions')">МИССИИ</div>
-        <div class="nav-item" onclick="tab('crypto')">ТЕРМИНАЛ</div>
+    <div class="nav-grid">
+        <div class="nav-item active" onclick="showView('dash')">ОБЗОР</div>
+        <div class="nav-item" onclick="showView('shop')">МАРКЕТ</div>
+        <div class="nav-item" onclick="showView('map')">СЕКТОРЫ</div>
+        <div class="nav-item" onclick="showView('inv')">СКЛАД</div>
+        <div class="nav-item" onclick="showView('term')">ЛОГИ</div>
+        <div class="nav-item" onclick="showView('sets')">ОС</div>
     </div>
 
-    <div id="dash" class="content-section active">
-        <div class="stats-grid">
-            <div class="stat-box"><span class="stat-val">98%</span><span class="stat-label">Энергия</span></div>
-            <div class="stat-box"><span class="stat-val">1.2к</span><span class="stat-label">Кредиты</span></div>
+    <div id="dash" class="view active">
+        <div class="card">
+            <h3>Уровень Синхронизации</h3>
+            <div class="progress-container"><div class="progress-bar" style="width: 65%"></div></div>
+            <p>Статус: Командор. До следующего ранга: 1,400 XP</p>
         </div>
         <div class="card">
-            <h3>Статус Корабля <span class="badge badge-success">ONLINE</span></h3>
-            <p>Все системы функционируют в штатном режиме. Обнаружено 3 новых сигнала в секторе Ориона.</p>
+            <h3>Активные процессы</h3>
+            <p>• Сканирование аномалий в секторе 4... [OK]</p>
+            <p>• Сборка нанитов в лабе... [45%]</p>
         </div>
-        <div class="card">
-            <h3>Уведомления</h3>
-            <p id="random-news">Загрузка данных из штаба...</p>
+        <button class="btn-main" onclick="tgAction('Daily Reward', 'Bonus Collected')">ПОЛУЧИТЬ ЕЖЕДНЕВНЫЙ БОНУС</button>
+    </div>
+
+    <div id="shop" class="view">
+        <div class="shop-grid">
+            <div class="shop-item" onclick="selectItem(this, 'Ядро ИИ', 500)">
+                <h3>Ядро ИИ</h3>
+                <span class="price-tag">500 ⚡</span>
+            </div>
+            <div class="shop-item" onclick="selectItem(this, 'Щит Пустоты', 1200)">
+                <h3>Щит Пустоты</h3>
+                <span class="price-tag">1200 ⚡</span>
+            </div>
+            <div class="shop-item" onclick="selectItem(this, 'Разлом', 3000)">
+                <h3>Разлом</h3>
+                <span class="price-tag">3000 ⚡</span>
+            </div>
+            <div class="shop-item" onclick="selectItem(this, 'Дрон-разведчик', 800)">
+                <h3>Дрон</h3>
+                <span class="price-tag">800 ⚡</span>
+            </div>
         </div>
     </div>
 
-    <div id="map" class="content-section">
-        <div class="card" onclick="act('Jump', 'Alpha Centauri')">
-            <h3>Альфа Центавра</h3>
-            <p>Ближайшая звездная система. Высокая активность торговцев.</p>
-            <button class="btn-action">СОВЕРШИТЬ ПРЫЖОК</button>
+    <div id="map" class="view">
+        <div class="card" onclick="tgAction('Warp', 'Mars Outpost')">
+            <h3>Аванпост Марс</h3>
+            <p>Сложность: Низкая. Шанс добычи: 15%</p>
+            <button class="btn-main" style="background: transparent; color: var(--accent); border: 1px solid var(--accent);">ПРЫЖОК</button>
         </div>
-        <div class="card" onclick="act('Scan', 'Deep Void')">
-            <h3>Глубокая Пустота</h3>
-            <p>Неизведанная зона. Высокий риск встречи с пиратами.</p>
-            <button class="btn-action">СКАНИРОВАТЬ</button>
-        </div>
-    </div>
-
-    <div id="cargo" class="content-section">
-        <div class="card">
-            <h3>Плазменная винтовка <span style="color:#aaa; font-size:0.8rem">Mk.II</span></h3>
-            <p>Урон: 450 | Пробитие: 80%</p>
-            <button class="btn-action" onclick="act('Equip', 'Plasma Rifle')">ЭКИПИРОВАТЬ</button>
-        </div>
-        <div class="card">
-            <h3>Силовой щит</h3>
-            <p>Прочность: 1200 | Восстановление: 50/сек</p>
-            <button class="btn-action" onclick="act('Equip', 'Power Shield')">ЭКИПИРОВАТЬ</button>
+        <div class="card" onclick="tgAction('Warp', 'Black Hole Edge')">
+            <h3>Край Черной Дыры</h3>
+            <p>Сложность: ЭКСТРЕМАЛЬНАЯ. Шанс добычи: 85%</p>
+            <button class="btn-main">НАЧАТЬ ЭКСПЕДИЦИЮ</button>
         </div>
     </div>
 
-    <div id="missions" class="content-section">
-        <div class="card">
-            <h3>Спасение дрона <span class="badge badge-danger">HOT</span></h3>
-            <p>Награда: 5000 CR | Сложность: Высокая</p>
-            <button class="btn-action" onclick="act('Mission', 'Drone Rescue')">ПРИНЯТЬ КОНТРАКТ</button>
+    <div id="term" class="view">
+        <div class="terminal" id="term-out">
+            > Initializing Aetheris Kernel...<br>
+            > Checking secure protocols...<br>
+            > Nexus Link: STABLE.<br>
         </div>
+        <button class="btn-main" onclick="runDiagnostic()">ЗАПУСТИТЬ ДИАГНОСТИКУ</button>
     </div>
 
-    <div class="footer-status">
-        <span>SYSTEM_ID: NEB-99</span>
-        <span id="clock">00:00:00</span>
+    <div class="footer">
+        <div class="balance">Энергия: <span id="balance-val">2,450</span> ⚡</div>
+        <div style="font-size: 0.7rem; opacity: 0.5;">v4.0.1-STABLE</div>
     </div>
 
     <script>
@@ -169,66 +143,65 @@
         tg.expand();
         tg.enableClosingConfirmation();
 
-        // Инициализация пользователя
+        // Данные пользователя
         if(tg.initDataUnsafe.user) {
-            document.getElementById('user-welcome').innerText = `Командор: ${tg.initDataUnsafe.user.first_name}`;
+            document.getElementById('user-status').innerText = `Сессия: ${tg.initDataUnsafe.user.username} | ID: ${tg.initDataUnsafe.user.id}`;
         }
 
-        // Переключение табов
-        function tab(name) {
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        function showView(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(name).classList.add('active');
-            event.target.classList.add('active');
-            tg.HapticFeedback.impactOccurred('light');
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
+            tg.HapticFeedback.impactOccurred('medium');
         }
 
-        // Действие и отправка данных боту
-        function act(type, target) {
-            tg.HapticFeedback.notificationOccurred('success');
+        let selected = null;
+        function selectItem(el, name, price) {
+            document.querySelectorAll('.shop-item').forEach(i => i.classList.remove('selected'));
+            el.classList.add('selected');
+            selected = { name, price };
             
-            // Настройка главной кнопки
-            tg.MainButton.setText(`ПОДТВЕРДИТЬ: ${type.toUpperCase()}`);
+            tg.MainButton.setText(`КУПИТЬ: ${name} (${price} ⚡)`);
             tg.MainButton.show();
             tg.MainButton.setParams({ color: "#00d2ff", text_color: "#000000" });
+        }
 
-            tg.MainButton.onClick(() => {
-                const payload = {
-                    action: type,
-                    target: target,
-                    timestamp: new Date().toLocaleTimeString(),
-                    user: tg.initDataUnsafe.user? tg.initDataUnsafe.user.id : 0
-                };
-                tg.sendData(JSON.stringify(payload));
+        tg.MainButton.onClick(() => {
+            if(selected) {
+                tgAction('Purchase', selected.name);
                 tg.MainButton.hide();
-            });
+            }
+        });
+
+        function tgAction(type, target) {
+            tg.HapticFeedback.notificationOccurred('success');
+            const data = {
+                op: type,
+                val: target,
+                ts: Date.now(),
+                ver: '4.0'
+            };
+            tg.sendData(JSON.stringify(data));
         }
 
-        // Генерация звездного фона
-        const container = document.getElementById('stars');
-        for(let i=0; i<100; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.width = star.style.height = Math.random() * 3 + 'px';
-            star.style.left = Math.random() * 100 + 'vw';
-            star.style.top = Math.random() * 100 + 'vh';
-            star.style.animationDuration = Math.random() * 3 + 2 + 's';
-            container.appendChild(star);
+        function runDiagnostic() {
+            const out = document.getElementById('term-out');
+            const msgs = [
+                "> Checking memory sectors...",
+                "> CPU load: 12% [OK]",
+                "> Network latency: 45ms",
+                "> Integrity: 100%",
+                "> Ready for commands."
+            ];
+            let i = 0;
+            const timer = setInterval(() => {
+                out.innerHTML += msgs[i] + "<br>";
+                out.scrollTop = out.scrollHeight;
+                i++;
+                if(i >= msgs.length) clearInterval(timer);
+            }, 500);
         }
-
-        // Часы
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        }, 1000);
-
-        // Рандомные новости
-        const news = [
-            "Патруль Альянса вошел в систему.", 
-            "Цены на темную материю выросли.", 
-            "Обнаружена аномалия в секторе 7."
-        ];
-        document.getElementById('random-news').innerText = news[Math.floor(Math.random()*news.length)];
-
     </script>
 </body>
 </html>
