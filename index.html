@@ -1,106 +1,164 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Cyber Terminal</title>
     <style>
-        :root { --main-color: var(--tg-theme-button-color, #248b65); }
-        body { background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); font-family: sans-serif; margin: 0; padding-bottom: 80px; }
-       .header { sticky: top; background: var(--tg-theme-secondary-bg-color); padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-       .categories { display: flex; overflow-x: auto; padding: 10px; gap: 10px; sticky: top; background: var(--tg-theme-bg-color); }
-       .cat-btn { background: var(--tg-theme-secondary-bg-color); border: 1px solid var(--main-color); color: var(--tg-theme-text-color); padding: 8px 15px; border-radius: 20px; white-space: nowrap; cursor: pointer; }
-       .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
-       .card { background: var(--tg-theme-secondary-bg-color); border-radius: 12px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
-       .price { font-weight: bold; color: var(--main-color); margin: 5px 0; }
-       .controls { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
-       .btn { background: var(--main-color); color: var(--tg-theme-button-text-color); border: none; border-radius: 5px; width: 30px; height: 30px; cursor: pointer; font-size: 18px; }
-       .count { font-weight: bold; min-width: 20px; }
+        :root {
+            --neon: #00ff41;
+            --bg: #0d0208;
+            --sec: #003b00;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg);
+            color: var(--neon);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+        }
+       .matrix-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+       .header {
+            padding: 20px; text-align: center; border-bottom: 2px solid var(--neon);
+            text-shadow: 0 0 10px var(--neon);
+        }
+       .tabs {
+            display: flex; overflow-x: auto; background: var(--sec);
+            position: sticky; top: 0; z-index: 10;
+        }
+       .tab-btn {
+            padding: 15px 25px; border: none; background: none;
+            color: var(--neon); cursor: pointer; white-space: nowrap;
+            font-weight: bold; border-right: 1px solid var(--neon);
+        }
+       .tab-btn.active { background: var(--neon); color: var(--bg); }
+        
+       .content { padding: 15px; }
+       .grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+       .card {
+            border: 1px solid var(--neon); padding: 15px;
+            background: rgba(0, 59, 0, 0.2); border-radius: 5px;
+            transition: 0.3s;
+        }
+       .card:active { background: var(--sec); transform: scale(0.98); }
+       .card h3 { margin-top: 0; font-size: 1.2rem; }
+       .card p { font-size: 0.9rem; opacity: 0.8; }
+        
+       .status-bar {
+            position: fixed; bottom: 0; width: 100%;
+            background: var(--sec); padding: 10px; font-size: 0.8rem;
+            border-top: 1px solid var(--neon);
+        }
+       .log-area {
+            height: 100px; overflow-y: auto; background: #000;
+            padding: 10px; margin-top: 10px; border: 1px solid var(--neon);
+            font-size: 0.7rem; color: #00ff41;
+        }
+       .cmd-btn {
+            margin-top: 10px; width: 100%; padding: 10px;
+            background: none; border: 1px solid var(--neon);
+            color: var(--neon); font-family: inherit; cursor: pointer;
+        }
+       .cmd-btn:hover { background: var(--neon); color: #000; }
     </style>
 </head>
 <body>
-    <div class="header"><h2>🚀 Мега-Маркет</h2></div>
-    
-    <div class="categories">
-        <button class="cat-btn" onclick="filter('all')">Все</button>
-        <button class="cat-btn" onclick="filter('coffee')">Кофе ☕</button>
-        <button class="cat-btn" onclick="filter('food')">Еда 🍔</button>
-        <button class="cat-btn" onclick="filter('sweet')">Десерты 🍰</button>
+    <div class="matrix-bg"></div>
+    <div class="header">
+        <h1>ACCESS GRANTED</h1>
+        <div id="user-info">ID: UNKNOWN</div>
     </div>
 
-    <div class="item-grid" id="grid"></div>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('vulner')">ВЗЛОМ</button>
+        <button class="tab-btn" onclick="showTab('network')">СЕТЬ</button>
+        <button class="tab-btn" onclick="showTab('crypto')">КРИПТО</button>
+        <button class="tab-btn" onclick="showTab('system')">СИСТЕМА</button>
+    </div>
+
+    <div class="content" id="app-content">
+        </div>
+
+    <div class="status-bar">
+        <div>TERMINAL_STATUS: ACTIVE</div>
+        <div class="log-area" id="logs">
+            > Initializing system...<br>
+            > Loading modules...<br>
+            > Connection established.<br>
+        </div>
+    </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
         
-        const products = [
-            {id: 1, cat: 'coffee', name: 'Капучино', price: 250},
-            {id: 2, cat: 'coffee', name: 'Латте Макиато', price: 300},
-            {id: 3, cat: 'coffee', name: 'Флэт Уайт', price: 280},
-            {id: 4, cat: 'food', name: 'Бургер XL', price: 450},
-            {id: 5, cat: 'food', name: 'Клаб-сендвич', price: 320},
-            {id: 6, cat: 'food', name: 'Картофель фри', price: 150},
-            {id: 7, cat: 'sweet', name: 'Чизкейк', price: 220},
-            {id: 8, cat: 'sweet', name: 'Тирамису', price: 280},
-            {id: 9, cat: 'sweet', name: 'Макарон (3шт)', price: 180}
-        ];
+        // Огромная база данных модулей
+        const modules = {
+            vulner:,
+            network:,
+            crypto:,
+            system:
+        };
 
-        let cart = {};
+        function addLog(msg) {
+            const logs = document.getElementById('logs');
+            logs.innerHTML += `> ${msg}<br>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
 
-        function render(filterCat = 'all') {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            products.forEach(p => {
-                if(filterCat!== 'all' && p.cat!== filterCat) return;
-                const count = cart[p.id] |
-
-| 0;
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const container = document.getElementById('app-content');
+            container.innerHTML = `<div class="grid"></div>`;
+            const grid = container.querySelector('.grid');
+            
+            modules[tabName].forEach(m => {
                 grid.innerHTML += `
-                    <div class="card">
-                        <div><strong>${p.name}</strong><div class="price">${p.price}₽</div></div>
-                        <div class="controls">
-                            <button class="btn" onclick="change(${p.id}, -1)">-</button>
-                            <span class="count">${count}</span>
-                            <button class="btn" onclick="change(${p.id}, 1)">+</button>
-                        </div>
-                    </div>`;
+                    <div class="card" onclick="execute('${m.name}', '${m.cmd}')">
+                        <h3>${m.name}</h3>
+                        <p>${m.desc}</p>
+                        <button class="cmd-btn">ЗАПУСТИТЬ</button>
+                    </div>
+                `;
+            });
+            addLog(`Переход в раздел: ${tabName.toUpperCase()}`);
+        }
+
+        function execute(name, cmd) {
+            addLog(`Запуск модуля: ${name}...`);
+            addLog(`Команда отправлена на сервер...`);
+            
+            // Настраиваем главную кнопку Telegram для подтверждения 
+            tg.MainButton.setText(`ПОДТВЕРДИТЬ: ${name}`);
+            tg.MainButton.show();
+            tg.MainButton.onClick(() => {
+                // Отправляем JSON боту [3, 4]
+                const data = JSON.stringify({
+                    module: name,
+                    command: cmd,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+                tg.sendData(data);
             });
         }
 
-        function change(id, delta) {
-            cart[id] = (cart[id] |
-
-| 0) + delta;
-            if(cart[id] <= 0) delete cart[id];
-            render(window.currentFilter);
-            updateMainButton();
+        // Инициализация при загрузке
+        if (tg.initDataUnsafe.user) {
+            document.getElementById('user-info').innerText = `ID: ${tg.initDataUnsafe.user.id} (${tg.initDataUnsafe.user.first_name})`;
         }
-
-        function updateMainButton() {
-            let total = 0;
-            let count = 0;
-            for(let id in cart) {
-                const p = products.find(prod => prod.id == id);
-                total += p.price * cart[id];
-                count += cart[id];
-            }
-
-            if(count > 0) {
-                tg.MainButton.setText(`Оформить заказ: ${total}₽ (${count} шт.)`);
-                tg.MainButton.show();
-            } else {
-                tg.MainButton.hide();
-            }
-        }
-
-        tg.MainButton.onClick(() => {
-            const result = products.filter(p => cart[p.id]).map(p => `${p.name} x${cart[p.id]}`);
-            tg.sendData(result.join(', '));
-        });
-
-        function filter(c) { window.currentFilter = c; render(c); }
-        filter('all');
+        showTab('vulner');
     </script>
 </body>
 </html>
