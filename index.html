@@ -2,33 +2,105 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); font-family: sans-serif; text-align: center; padding: 20px; }
-      .item { background: var(--tg-theme-secondary-bg-color); padding: 10px; margin: 10px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; }
-      .selected { border-color: var(--tg-theme-button-color); }
+        :root { --main-color: var(--tg-theme-button-color, #248b65); }
+        body { background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+       .header { sticky: top; background: var(--tg-theme-secondary-bg-color); padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+       .categories { display: flex; overflow-x: auto; padding: 10px; gap: 10px; sticky: top; background: var(--tg-theme-bg-color); }
+       .cat-btn { background: var(--tg-theme-secondary-bg-color); border: 1px solid var(--main-color); color: var(--tg-theme-text-color); padding: 8px 15px; border-radius: 20px; white-space: nowrap; cursor: pointer; }
+       .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
+       .card { background: var(--tg-theme-secondary-bg-color); border-radius: 12px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+       .price { font-weight: bold; color: var(--main-color); margin: 5px 0; }
+       .controls { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
+       .btn { background: var(--main-color); color: var(--tg-theme-button-text-color); border: none; border-radius: 5px; width: 30px; height: 30px; cursor: pointer; font-size: 18px; }
+       .count { font-weight: bold; min-width: 20px; }
     </style>
 </head>
 <body>
-    <h1>☕ Наше Кафе</h1>
-    <div class="item" onclick="select(this, 'Капучино')">Капучино ☕</div>
-    <div class="item" onclick="select(this, 'Латте')">Латте 🥛</div>
-    <div class="item" onclick="select(this, 'Круассан')">Круассан 🥐</div>
+    <div class="header"><h2>🚀 Мега-Маркет</h2></div>
+    
+    <div class="categories">
+        <button class="cat-btn" onclick="filter('all')">Все</button>
+        <button class="cat-btn" onclick="filter('coffee')">Кофе ☕</button>
+        <button class="cat-btn" onclick="filter('food')">Еда 🍔</button>
+        <button class="cat-btn" onclick="filter('sweet')">Десерты 🍰</button>
+    </div>
+
+    <div class="item-grid" id="grid"></div>
+
     <script>
         let tg = window.Telegram.WebApp;
-        let selectedItem = "";
         tg.expand();
-        function select(el, name) {
-            document.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
-            el.classList.add('selected');
-            selectedItem = name;
-            tg.MainButton.setText("Заказать " + name);
-            tg.MainButton.show();
+        
+        const products = [
+            {id: 1, cat: 'coffee', name: 'Капучино', price: 250},
+            {id: 2, cat: 'coffee', name: 'Латте Макиато', price: 300},
+            {id: 3, cat: 'coffee', name: 'Флэт Уайт', price: 280},
+            {id: 4, cat: 'food', name: 'Бургер XL', price: 450},
+            {id: 5, cat: 'food', name: 'Клаб-сендвич', price: 320},
+            {id: 6, cat: 'food', name: 'Картофель фри', price: 150},
+            {id: 7, cat: 'sweet', name: 'Чизкейк', price: 220},
+            {id: 8, cat: 'sweet', name: 'Тирамису', price: 280},
+            {id: 9, cat: 'sweet', name: 'Макарон (3шт)', price: 180}
+        ];
+
+        let cart = {};
+
+        function render(filterCat = 'all') {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            products.forEach(p => {
+                if(filterCat!== 'all' && p.cat!== filterCat) return;
+                const count = cart[p.id] |
+
+| 0;
+                grid.innerHTML += `
+                    <div class="card">
+                        <div><strong>${p.name}</strong><div class="price">${p.price}₽</div></div>
+                        <div class="controls">
+                            <button class="btn" onclick="change(${p.id}, -1)">-</button>
+                            <span class="count">${count}</span>
+                            <button class="btn" onclick="change(${p.id}, 1)">+</button>
+                        </div>
+                    </div>`;
+            });
         }
+
+        function change(id, delta) {
+            cart[id] = (cart[id] |
+
+| 0) + delta;
+            if(cart[id] <= 0) delete cart[id];
+            render(window.currentFilter);
+            updateMainButton();
+        }
+
+        function updateMainButton() {
+            let total = 0;
+            let count = 0;
+            for(let id in cart) {
+                const p = products.find(prod => prod.id == id);
+                total += p.price * cart[id];
+                count += cart[id];
+            }
+
+            if(count > 0) {
+                tg.MainButton.setText(`Оформить заказ: ${total}₽ (${count} шт.)`);
+                tg.MainButton.show();
+            } else {
+                tg.MainButton.hide();
+            }
+        }
+
         tg.MainButton.onClick(() => {
-            tg.sendData(selectedItem);
+            const result = products.filter(p => cart[p.id]).map(p => `${p.name} x${cart[p.id]}`);
+            tg.sendData(result.join(', '));
         });
+
+        function filter(c) { window.currentFilter = c; render(c); }
+        filter('all');
     </script>
 </body>
 </html>
-
