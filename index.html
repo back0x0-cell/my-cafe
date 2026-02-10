@@ -3,1203 +3,703 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telegram Mini App Shop</title>
+    <title>SuperApp - Telegram Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* =========================================
-           CSS STYLES (ОФОРМЛЕНИЕ)
-           =========================================
-        */
-        :root {
-            /* Переменные цветов из темы Telegram */
-            --tg-bg: var(--tg-theme-bg-color, #fff);
-            --tg-text: var(--tg-theme-text-color, #000);
-            --tg-hint: var(--tg-theme-hint-color, #999);
-            --tg-link: var(--tg-theme-link-color, #2481cc);
-            --tg-btn: var(--tg-theme-button-color, #2481cc);
-            --tg-btn-text: var(--tg-theme-button-text-color, #fff);
-            --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #efeff3);
-            
-            /* Свои цвета */
-            --orange: #ff9f0a;
-            --green: #30d158;
-            --red: #ff453a;
-            --card-radius: 14px;
-            --anim-speed: 0.25s;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-bg);
-            color: var(--tg-text);
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* --- ЗАГРУЗЧИК (PRELOADER) --- */
-        #loader {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--tg-bg);
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.3s;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--tg-secondary-bg);
-            border-top: 4px solid var(--tg-btn);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* --- ШАПКА --- */
-        header {
-            padding: 10px 16px;
-            position: sticky;
-            top: 0;
-            background: var(--tg-bg);
-            z-index: 100;
-            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .logo {
-            font-size: 20px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 2px;
-        }
-        .user-balance {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--green);
-        }
-        .user-name {
-            font-size: 12px;
-            color: var(--tg-hint);
-        }
-
-        /* --- НАВИГАЦИЯ (КАТЕГОРИИ) --- */
-        .tabs-container {
-            padding: 10px 0;
-            background: var(--tg-bg);
-            position: sticky;
-            top: 50px;
-            z-index: 99;
-            overflow-x: auto;
-            white-space: nowrap;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .tabs-container::-webkit-scrollbar { display: none; }
-        
-        .tabs-inner {
-            padding: 0 16px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .tab {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            background-color: var(--tg-secondary-bg);
-            color: var(--tg-text);
-            border: none;
-            transition: all var(--anim-speed);
-            cursor: pointer;
-        }
-        .tab.active {
-            background-color: var(--tg-btn);
-            color: var(--tg-btn-text);
-            transform: scale(1.05);
-        }
-
-        /* --- СЕТКА ТОВАРОВ --- */
-        .container {
-            padding: 16px;
-            padding-bottom: 100px;
-            transition: opacity 0.2s ease;
-        }
-        .container.transitioning {
-            opacity: 0.7;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .card {
-            background: var(--tg-secondary-bg);
-            border-radius: var(--card-radius);
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.1s;
-        }
-        .card:active { transform: scale(0.97); }
-        .card.expired {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        .card-img {
-            width: 100%;
-            aspect-ratio: 1/1;
-            object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            background-color: rgba(0,0,0,0.05);
-        }
-
-        .card-title {
-            font-size: 14px;
-            font-weight: 700;
-            margin-bottom: 4px;
-            line-height: 1.2;
-        }
-        .card-desc {
-            font-size: 11px;
-            color: var(--tg-hint);
-            margin-bottom: 6px;
-            flex-grow: 1;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
-        .expiry-date {
-            font-size: 10px;
-            color: var(--tg-hint);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .expiry-date.warning {
-            color: var(--orange);
-            font-weight: 600;
-        }
-        .expiry-date.expired {
-            color: var(--red);
-            font-weight: 700;
-        }
-
-        .card-bottom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: auto;
-        }
-
-        .price {
-            font-size: 15px;
-            font-weight: 800;
-        }
-
-        /* --- КНОПКИ УПРАВЛЕНИЯ КОЛИЧЕСТВОМ --- */
-        .btn-add {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--tg-btn);
-            color: var(--tg-btn-text);
-            border: none;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .counter-wrap {
-            display: none;
-            align-items: center;
-            background: var(--tg-btn);
-            border-radius: 16px;
-            height: 32px;
-            padding: 0 2px;
-        }
-        .counter-wrap.show { display: flex; }
-
-        .btn-minus, .btn-plus {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--tg-btn-text);
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .count-value {
-            color: var(--tg-btn-text);
-            font-weight: 700;
-            font-size: 14px;
-            min-width: 20px;
-            text-align: center;
-        }
-
-        /* --- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ (TOAST) --- */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(5px);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
-            z-index: 2000;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .toast.visible {
-            transform: translateX(-50%) translateY(0);
-        }
-        .toast.success { background: rgba(48, 209, 88, 0.9); }
-        .toast.error { background: rgba(255, 69, 58, 0.9); }
-        .toast.warning { background: rgba(255, 159, 10, 0.9); }
-
-        /* --- КУХНЯ --- */
-        .kitchen-container {
-            padding: 16px;
-            transition: opacity 0.2s ease;
-        }
-        .kitchen-container.transitioning {
-            opacity: 0.7;
-        }
-        
-        .kitchen-section {
-            background: var(--tg-secondary-bg);
-            border-radius: var(--card-radius);
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-        
-        .ingredients-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        
-        .ingredient-chip {
-            padding: 6px 12px;
-            border-radius: 20px;
-            background: var(--tg-bg);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-        .ingredient-chip.selected {
-            background: var(--tg-btn);
-            color: var(--tg-btn-text);
-            border-color: var(--tg-btn);
-        }
-        .ingredient-chip.disabled {
-            opacity: 0.3;
-            pointer-events: none;
-        }
-        
-        .recipe-input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: 2px solid var(--tg-secondary-bg);
-            background: var(--tg-bg);
-            font-size: 14px;
-            margin-bottom: 12px;
-            font-family: inherit;
-            color: var(--tg-text);
-        }
-        .recipe-input:focus {
-            outline: none;
-            border-color: var(--tg-btn);
-        }
-        
-        .cook-btn {
-            width: 100%;
-            padding: 14px;
-            background: var(--green);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .cook-btn:active {
-            transform: scale(0.98);
-        }
-        .cook-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .my-dishes {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-        
-        .dish-card {
-            background: var(--tg-bg);
-            border-radius: 12px;
-            padding: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .dish-info {
-            flex: 1;
-        }
-        
-        .dish-name {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        
-        .dish-ingredients {
-            font-size: 11px;
-            color: var(--tg-hint);
-            margin-bottom: 4px;
-        }
-        
-        .dish-status {
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .dish-status.on-sale {
-            color: var(--green);
-        }
-        .dish-status.sold {
-            color: var(--tg-hint);
-        }
-        .dish-status.stolen {
-            color: var(--red);
-        }
-        
-        .sell-btn {
-            padding: 8px 16px;
-            background: var(--tg-btn);
-            color: var(--tg-btn-text);
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* Анимация появления товаров */
+        /* Кастомные анимации и стили */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .card { animation: fadeIn 0.4s ease forwards; }
-
-        /* Notification modal */
-        .notification-modal {
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes clickAnimation {
+            0% { transform: scale(1) translateY(0); opacity: 1; }
+            100% { transform: scale(1.5) translateY(-50px); opacity: 0; }
+        }
+        
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        .slide-up { animation: slideUp 0.4s ease-out; }
+        .pulse { animation: pulse 2s ease-in-out infinite; }
+        .float { animation: float 3s ease-in-out infinite; }
+        
+        .click-number {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: clickAnimation 1s ease-out forwards;
+        }
+        
+        /* Адаптивная цветовая схема */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7f7f7;
+            --text-primary: #000000;
+            --text-secondary: #6b7280;
+            --accent: #2481cc;
+            --border: #e5e7eb;
+        }
+        
+        body.dark {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --accent: #3b82f6;
+            --border: #374151;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .bg-primary { background-color: var(--bg-primary); }
+        .bg-secondary { background-color: var(--bg-secondary); }
+        .text-primary { color: var(--text-primary); }
+        .text-secondary { color: var(--text-secondary); }
+        .border-custom { border-color: var(--border); }
+        .accent { color: var(--accent); }
+        .bg-accent { background-color: var(--accent); }
+        
+        /* Скрытие полос прокрутки */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Стили для калькулятора */
+        .calc-display {
+            font-family: 'Courier New', monospace;
+            font-size: 2rem;
+            min-height: 80px;
+        }
+        
+        /* Кнопка кликера */
+        .clicker-btn {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            transition: transform 0.1s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .clicker-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Нижняя навигация */
+        .bottom-nav {
             position: fixed;
-            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.6);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 3000;
-        }
-        .notification-modal.show {
+            height: 70px;
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border);
             display: flex;
-        }
-        
-        .notification-content {
-            background: var(--tg-bg);
-            padding: 24px;
-            border-radius: 20px;
-            max-width: 300px;
-            text-align: center;
-            animation: scaleIn 0.3s ease;
-        }
-        
-        @keyframes scaleIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        
-        .notification-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        
-        .notification-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        
-        .notification-message {
-            font-size: 14px;
-            color: var(--tg-hint);
-            margin-bottom: 20px;
-        }
-        
-        .notification-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--tg-btn);
-            color: var(--tg-btn-text);
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* Индикатор свайпа */
-        .swipe-hint {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 11px;
-            color: var(--tg-hint);
-            background: rgba(0,0,0,0.05);
-            padding: 6px 14px;
-            border-radius: 20px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+            justify-content: space-around;
+            align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(10px);
         }
-        .swipe-hint.show {
-            opacity: 1;
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            height: 100%;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
         }
-        .swipe-hint::before {
-            content: '← Свайп →';
+        
+        .nav-item.active {
+            color: var(--accent);
         }
-
+        
+        .nav-item:active {
+            transform: scale(0.95);
+        }
+        
+        /* Контент с учетом нижней навигации */
+        .content {
+            padding-bottom: 90px;
+        }
     </style>
 </head>
 <body>
+    <!-- Основной контейнер -->
+    <div id="app" class="min-h-screen">
+        <!-- Заголовок -->
+        <header class="sticky top-0 z-50 bg-secondary border-b border-custom px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">⚡</span>
+                    <h1 class="text-xl font-bold">SuperApp</h1>
+                </div>
+                <div id="userAvatar" class="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white font-bold">
+                    U
+                </div>
+            </div>
+        </header>
 
-    <div id="loader">
-        <div class="spinner"></div>
-    </div>
+        <!-- Контент страниц -->
+        <main class="content px-4 py-6">
+            <!-- Главная страница -->
+            <div id="page-home" class="page-content">
+                <div class="fade-in space-y-6">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold mb-2">Добро пожаловать! 👋</h2>
+                        <p class="text-secondary">Ваш умный помощник в Telegram</p>
+                    </div>
 
-    <div id="toast" class="toast">
-        <span id="toast-icon">✅</span> <span id="toast-msg">Товар добавлен</span>
-    </div>
+                    <!-- Быстрые действия -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-secondary rounded-2xl p-6 text-center cursor-pointer hover:opacity-80 transition" onclick="switchPage('calculator')">
+                            <div class="text-4xl mb-2">🧮</div>
+                            <div class="font-semibold">Калькулятор</div>
+                        </div>
+                        <div class="bg-secondary rounded-2xl p-6 text-center cursor-pointer hover:opacity-80 transition" onclick="switchPage('tools')">
+                            <div class="text-4xl mb-2">🛠️</div>
+                            <div class="font-semibold">Инструменты</div>
+                        </div>
+                        <div class="bg-secondary rounded-2xl p-6 text-center cursor-pointer hover:opacity-80 transition" onclick="switchPage('stats')">
+                            <div class="text-4xl mb-2">📊</div>
+                            <div class="font-semibold">Статистика</div>
+                        </div>
+                        <div class="bg-secondary rounded-2xl p-6 text-center cursor-pointer hover:opacity-80 transition" onclick="switchPage('settings')">
+                            <div class="text-4xl mb-2">⚙️</div>
+                            <div class="font-semibold">Настройки</div>
+                        </div>
+                    </div>
 
-    <div class="swipe-hint" id="swipeHint"></div>
+                    <!-- Инфо-панель -->
+                    <div class="bg-secondary rounded-2xl p-6">
+                        <h3 class="text-lg font-bold mb-4">📅 Информация</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-secondary">Сейчас:</span>
+                                <span class="font-semibold" id="currentTime">--:--</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-secondary">День недели:</span>
+                                <span class="font-semibold" id="currentDay">---</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-secondary">До выходных:</span>
+                                <span class="font-semibold" id="daysToWeekend">---</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-secondary">Батарея:</span>
+                                <span class="font-semibold" id="batteryLevel">🔋 ---%</span>
+                            </div>
+                        </div>
+                    </div>
 
-    <!-- Модальное окно уведомлений -->
-    <div id="notificationModal" class="notification-modal">
-        <div class="notification-content">
-            <div class="notification-icon" id="notifIcon">🎉</div>
-            <div class="notification-title" id="notifTitle">Успех!</div>
-            <div class="notification-message" id="notifMessage">Покупка совершена</div>
-            <button class="notification-btn" onclick="closeNotification()">OK</button>
-        </div>
-    </div>
+                    <!-- Игровой элемент - Кликер -->
+                    <div class="bg-secondary rounded-2xl p-6 text-center">
+                        <h3 class="text-lg font-bold mb-4">🎮 Кликер</h3>
+                        <div class="relative inline-block">
+                            <button id="clickerBtn" class="clicker-btn bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-2xl">
+                                <div id="clickCount" class="pulse">0</div>
+                            </button>
+                        </div>
+                        <p class="text-secondary mt-4">Нажми на круг!</p>
+                    </div>
+                </div>
+            </div>
 
-    <header>
-        <div class="logo">🚀 MarketApp</div>
-        <div class="user-info">
-            <div class="user-balance" id="userBalance">1000 ₽</div>
-            <div class="user-name" id="userName">Гость</div>
-        </div>
-    </header>
+            <!-- Страница Инструменты -->
+            <div id="page-tools" class="page-content hidden">
+                <div class="fade-in space-y-6">
+                    <h2 class="text-2xl font-bold mb-6">🛠️ Инструменты</h2>
 
-    <div class="tabs-container">
-        <div class="tabs-inner" id="tabsList">
-            <button class="tab active" onclick="setCategory('all', this)">Все</button>
-            <button class="tab" onclick="setCategory('burgers', this)">Бургеры</button>
-            <button class="tab" onclick="setCategory('pizza', this)">Пицца</button>
-            <button class="tab" onclick="setCategory('sushi', this)">Суши</button>
-            <button class="tab" onclick="setCategory('drinks', this)">Напитки</button>
-            <button class="tab" onclick="setCategory('tech', this)">Техника</button>
-            <button class="tab" onclick="setCategory('kitchen', this)">🍳 Кухня</button>
-        </div>
-    </div>
+                    <!-- Умный калькулятор -->
+                    <div class="bg-secondary rounded-2xl p-6" id="calculator">
+                        <h3 class="text-lg font-bold mb-4">🧮 Умный Калькулятор</h3>
+                        <input 
+                            type="text" 
+                            id="calcInput" 
+                            class="w-full bg-primary text-primary border border-custom rounded-xl px-4 py-3 mb-4 text-lg"
+                            placeholder="Введите выражение (например: 2 + 2 * 5)"
+                        />
+                        <div class="calc-display bg-primary border border-custom rounded-xl px-4 py-6 mb-4 text-center font-bold">
+                            <div id="calcResult" class="accent">= 0</div>
+                        </div>
+                        <div class="text-xs text-secondary">
+                            Поддерживаются: +, -, *, /, ^ (степень), sqrt() (корень), скобки
+                        </div>
+                    </div>
 
-    <div class="container" id="mainContainer">
-        <div class="grid" id="productsGrid"></div>
-    </div>
+                    <!-- Анализатор текста -->
+                    <div class="bg-secondary rounded-2xl p-6">
+                        <h3 class="text-lg font-bold mb-4">📝 Анализатор Текста</h3>
+                        <textarea 
+                            id="textInput" 
+                            class="w-full bg-primary text-primary border border-custom rounded-xl px-4 py-3 mb-4 h-32 resize-none"
+                            placeholder="Вставьте текст для анализа..."
+                        ></textarea>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="bg-primary rounded-xl p-4 text-center">
+                                <div class="text-2xl font-bold accent" id="charCount">0</div>
+                                <div class="text-xs text-secondary">Символов</div>
+                            </div>
+                            <div class="bg-primary rounded-xl p-4 text-center">
+                                <div class="text-2xl font-bold accent" id="charNoSpaceCount">0</div>
+                                <div class="text-xs text-secondary">Без пробелов</div>
+                            </div>
+                            <div class="bg-primary rounded-xl p-4 text-center">
+                                <div class="text-2xl font-bold accent" id="wordCount">0</div>
+                                <div class="text-xs text-secondary">Слов</div>
+                            </div>
+                            <div class="bg-primary rounded-xl p-4 text-center">
+                                <div class="text-2xl font-bold accent" id="uniqueWordCount">0</div>
+                                <div class="text-xs text-secondary">Уникальных</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="clearText()" class="flex-1 bg-red-500 text-white rounded-xl py-3 font-semibold">
+                                Очистить
+                            </button>
+                            <button onclick="copyResult()" class="flex-1 bg-accent text-white rounded-xl py-3 font-semibold">
+                                Скопировать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Секция Кухни -->
-    <div class="kitchen-container" id="kitchenContainer" style="display: none;">
-        <div class="kitchen-section">
-            <div class="section-title">📦 Мои ингредиенты</div>
-            <div class="ingredients-list" id="ingredientsList"></div>
-        </div>
+            <!-- Страница Статистика -->
+            <div id="page-stats" class="page-content hidden">
+                <div class="fade-in space-y-6">
+                    <h2 class="text-2xl font-bold mb-6">📊 Статистика</h2>
 
-        <div class="kitchen-section">
-            <div class="section-title">👨‍🍳 Создать блюдо</div>
-            <input type="text" 
-                   class="recipe-input" 
-                   id="dishNameInput" 
-                   placeholder="Название блюда"
-                   maxlength="30">
-            <div class="section-title" style="font-size: 14px; margin-bottom: 8px;">Выберите ингредиенты:</div>
-            <div class="ingredients-list" id="selectedIngredients"></div>
-            <button class="cook-btn" id="cookBtn" onclick="cookDish()">Приготовить блюдо</button>
-        </div>
+                    <!-- Данные пользователя Telegram -->
+                    <div class="bg-secondary rounded-2xl p-6">
+                        <h3 class="text-lg font-bold mb-4">👤 Ваши данные Telegram</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <div id="userPhoto" class="w-16 h-16 rounded-full bg-accent flex items-center justify-center text-white text-2xl font-bold">
+                                    U
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-bold text-lg" id="userName">Имя пользователя</div>
+                                    <div class="text-secondary text-sm" id="userUsername">@username</div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-primary rounded-xl p-4">
+                                    <div class="text-xs text-secondary mb-1">User ID</div>
+                                    <div class="font-bold" id="userId">---</div>
+                                </div>
+                                <div class="bg-primary rounded-xl p-4">
+                                    <div class="text-xs text-secondary mb-1">Язык</div>
+                                    <div class="font-bold" id="userLang">---</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <div class="kitchen-section">
-            <div class="section-title">🍽️ Мои блюда</div>
-            <div class="my-dishes" id="myDishes"></div>
-        </div>
+                    <!-- Haptic Feedback тест -->
+                    <div class="bg-secondary rounded-2xl p-6">
+                        <h3 class="text-lg font-bold mb-4">📳 Haptic Feedback</h3>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="hapticImpact('light')" class="bg-primary rounded-xl py-4 font-semibold hover:opacity-80">
+                                Light
+                            </button>
+                            <button onclick="hapticImpact('medium')" class="bg-primary rounded-xl py-4 font-semibold hover:opacity-80">
+                                Medium
+                            </button>
+                            <button onclick="hapticImpact('heavy')" class="bg-primary rounded-xl py-4 font-semibold hover:opacity-80">
+                                Heavy
+                            </button>
+                            <button onclick="hapticNotification('success')" class="bg-green-500 text-white rounded-xl py-4 font-semibold col-span-3">
+                                Success
+                            </button>
+                            <button onclick="hapticNotification('warning')" class="bg-yellow-500 text-white rounded-xl py-4 font-semibold col-span-3">
+                                Warning
+                            </button>
+                            <button onclick="hapticNotification('error')" class="bg-red-500 text-white rounded-xl py-4 font-semibold col-span-3">
+                                Error
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Статистика кликера -->
+                    <div class="bg-secondary rounded-2xl p-6">
+                        <h3 class="text-lg font-bold mb-4">🎮 Статистика Кликера</h3>
+                        <div class="text-center">
+                            <div class="text-5xl font-bold accent mb-2" id="totalClicks">0</div>
+                            <div class="text-secondary">Всего кликов</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Страница Настройки -->
+            <div id="page-settings" class="page-content hidden">
+                <div class="fade-in space-y-6">
+                    <h2 class="text-2xl font-bold mb-6">⚙️ Настройки</h2>
+
+                    <div class="bg-secondary rounded-2xl p-6">
+                        <h3 class="text-lg font-bold mb-4">Тема оформления</h3>
+                        <div class="flex items-center justify-between">
+                            <span>Текущая тема:</span>
+                            <span class="font-bold" id="currentTheme">Светлая</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-secondary rounded-2xl p-6">
+                        <h3 class="text-lg font-bold mb-4">О приложении</h3>
+                        <div class="space-y-2 text-secondary">
+                            <p>Версия: 1.0.0</p>
+                            <p>Разработано для Telegram Mini Apps</p>
+                            <p>Все данные хранятся локально</p>
+                        </div>
+                    </div>
+
+                    <button onclick="resetApp()" class="w-full bg-red-500 text-white rounded-xl py-4 font-semibold">
+                        Сбросить все данные
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Нижняя навигация -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="switchPage('home')" data-page="home">
+                <div class="text-2xl">🏠</div>
+                <div class="text-xs mt-1">Главная</div>
+            </div>
+            <div class="nav-item" onclick="switchPage('tools')" data-page="tools">
+                <div class="text-2xl">🛠️</div>
+                <div class="text-xs mt-1">Инструменты</div>
+            </div>
+            <div class="nav-item" onclick="switchPage('stats')" data-page="stats">
+                <div class="text-2xl">📊</div>
+                <div class="text-xs mt-1">Статистика</div>
+            </div>
+            <div class="nav-item" onclick="switchPage('settings')" data-page="settings">
+                <div class="text-2xl">⚙️</div>
+                <div class="text-xs mt-1">Настройки</div>
+            </div>
+        </nav>
     </div>
 
     <script>
-        /* =========================================
-           JAVASCRIPT LOGIC (ФУНКЦИОНАЛ)
-           =========================================
-        */
-
-        // 1. Инициализация Telegram API
+        /**
+         * ИНИЦИАЛИЗАЦИЯ TELEGRAM WEB APP SDK
+         * Подключаем SDK и настраиваем базовые параметры приложения
+         */
         const tg = window.Telegram.WebApp;
+        tg.ready();
         tg.expand();
 
-        tg.setHeaderColor(tg.themeParams.bg_color || '#ffffff');
-        tg.setBackgroundColor(tg.themeParams.bg_color || '#ffffff');
-
-        const userEl = document.getElementById('userName');
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            userEl.innerText = tg.initDataUnsafe.user.first_name;
+        // Устанавливаем цвета приложения в соответствии с темой Telegram
+        const colorScheme = tg.colorScheme || 'light';
+        if (colorScheme === 'dark') {
+            document.body.classList.add('dark');
+            document.getElementById('currentTheme').textContent = 'Темная';
         }
 
-        // 2. База данных товаров с сроками годности
-        const db = [
-            // Бургеры (срок 2-3 дня)
-            { id: 101, cat: 'burgers', name: 'Чизбургер XL', price: 290, desc: 'Двойная котлета, чеддер, соус', img: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png', shelfLife: 2 },
-            { id: 102, cat: 'burgers', name: 'Биг Тейсти', price: 350, desc: 'Классический вкус, свежие овощи', img: 'https://cdn-icons-png.flaticon.com/512/877/877951.png', shelfLife: 2 },
-            { id: 103, cat: 'burgers', name: 'Чикен Премьер', price: 270, desc: 'Куриное филе в панировке', img: 'https://cdn-icons-png.flaticon.com/512/1057/1057356.png', shelfLife: 3 },
-            // Пицца (срок 3-5 дней)
-            { id: 201, cat: 'pizza', name: 'Пепперони', price: 590, desc: 'Острая колбаска, моцарелла', img: 'https://cdn-icons-png.flaticon.com/512/3132/3132693.png', shelfLife: 4 },
-            { id: 202, cat: 'pizza', name: '4 Сыра', price: 650, desc: 'Пармезан, чеддер, дорблю', img: 'https://cdn-icons-png.flaticon.com/512/1404/1404945.png', shelfLife: 3 },
-            { id: 203, cat: 'pizza', name: 'Маргарита', price: 450, desc: 'Томаты, базилик, сыр', img: 'https://cdn-icons-png.flaticon.com/512/3595/3595455.png', shelfLife: 3 },
-            { id: 204, cat: 'pizza', name: 'Диабло', price: 620, desc: 'Очень острая с халапеньо', img: 'https://cdn-icons-png.flaticon.com/512/6978/6978255.png', shelfLife: 4 },
-            // Суши (срок 1 день)
-            { id: 301, cat: 'sushi', name: 'Филадельфия', price: 550, desc: 'Лосось, сливочный сыр', img: 'https://cdn-icons-png.flaticon.com/512/2252/2252075.png', shelfLife: 1 },
-            { id: 302, cat: 'sushi', name: 'Калифорния', price: 490, desc: 'Краб, авокадо, икра', img: 'https://cdn-icons-png.flaticon.com/512/3183/3183424.png', shelfLife: 1 },
-            { id: 303, cat: 'sushi', name: 'Маки с огурцом', price: 190, desc: 'Классические роллы', img: 'https://cdn-icons-png.flaticon.com/512/1900/1900683.png', shelfLife: 1 },
-            // Напитки (срок 30-90 дней)
-            { id: 401, cat: 'drinks', name: 'Кола 0.5', price: 120, desc: 'Холодная газировка', img: 'https://cdn-icons-png.flaticon.com/512/2405/2405597.png', shelfLife: 90 },
-            { id: 402, cat: 'drinks', name: 'Американо', price: 150, desc: 'Горячий зерновой кофе', img: 'https://cdn-icons-png.flaticon.com/512/924/924514.png', shelfLife: 1 },
-            { id: 403, cat: 'drinks', name: 'Милкшейк', price: 250, desc: 'Ванильный вкус', img: 'https://cdn-icons-png.flaticon.com/512/3081/3081162.png', shelfLife: 2 },
-            // Техника (без срока годности)
-            { id: 501, cat: 'tech', name: 'AirPods Pro', price: 20000, desc: 'Шумоподавление', img: 'https://cdn-icons-png.flaticon.com/512/5906/5906169.png', shelfLife: null },
-            { id: 502, cat: 'tech', name: 'PowerBank', price: 3000, desc: '10000 mAh', img: 'https://cdn-icons-png.flaticon.com/512/4507/4507563.png', shelfLife: null },
-        ];
-
-        // 3. Состояние приложения
-        let userMoney = 1000; // Начальный баланс
-        let cart = {};
-        let currentCat = 'all';
-        let inventory = {}; // Купленные товары с датами покупки
-        let myDishes = []; // Приготовленные блюда
-        let selectedIngredientsForCooking = [];
-
-        // 4. Логика Рендеринга
-        const grid = document.getElementById('productsGrid');
-        const mainContainer = document.getElementById('mainContainer');
-        const kitchenContainer = document.getElementById('kitchenContainer');
-
-        function render() {
-            // Добавляем эффект перехода
-            mainContainer.classList.add('transitioning');
-            kitchenContainer.classList.add('transitioning');
-            
-            setTimeout(() => {
-                if (currentCat === 'kitchen') {
-                    mainContainer.style.display = 'none';
-                    kitchenContainer.style.display = 'block';
-                    renderKitchen();
-                } else {
-                    mainContainer.style.display = 'block';
-                    kitchenContainer.style.display = 'none';
-                    renderProducts();
-                }
-                
-                setTimeout(() => {
-                    mainContainer.classList.remove('transitioning');
-                    kitchenContainer.classList.remove('transitioning');
-                }, 50);
-            }, 100);
-        }
-
-        function renderProducts() {
-            grid.innerHTML = '';
-            
-            const filtered = currentCat === 'all' 
-                ? db 
-                : db.filter(item => item.cat === currentCat);
-
-            if (filtered.length === 0) {
-                grid.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 20px; color: var(--tg-hint);">В этой категории пусто 😔</div>';
-                return;
-            }
-
-            filtered.forEach(item => {
-                const count = cart[item.id] || 0;
-                const inventoryItem = inventory[item.id];
-                
-                let expiryHTML = '';
-                let isExpired = false;
-                
-                if (inventoryItem && item.shelfLife) {
-                    const daysPassed = Math.floor((Date.now() - inventoryItem.purchaseDate) / (1000 * 60 * 60 * 24));
-                    const daysLeft = item.shelfLife - daysPassed;
-                    
-                    if (daysLeft <= 0) {
-                        expiryHTML = '<div class="expiry-date expired">⚠️ Просрочено</div>';
-                        isExpired = true;
-                    } else if (daysLeft <= 1) {
-                        expiryHTML = `<div class="expiry-date warning">⏰ Осталось ${daysLeft} день</div>`;
-                    } else {
-                        expiryHTML = `<div class="expiry-date">📅 Годен ${daysLeft} дн.</div>`;
-                    }
-                }
-                
-                const card = document.createElement('div');
-                card.className = `card ${isExpired ? 'expired' : ''}`;
-                card.innerHTML = `
-                    <img src="${item.img}" class="card-img" alt="${item.name}">
-                    <div class="card-title">${item.name}</div>
-                    <div class="card-desc">${item.desc}</div>
-                    ${expiryHTML}
-                    <div class="card-bottom">
-                        <div class="price">${item.price} ₽</div>
-                        
-                        <button class="btn-add" id="add-${item.id}" 
-                                onclick="addItem(${item.id})" 
-                                style="display: ${count > 0 ? 'none' : 'flex'}">
-                            +
-                        </button>
-
-                        <div class="counter-wrap ${count > 0 ? 'show' : ''}" id="counter-${item.id}">
-                            <div class="btn-minus" onclick="minusItem(${item.id})">−</div>
-                            <div class="count-value" id="val-${item.id}">${count}</div>
-                            <div class="btn-plus" onclick="addItem(${item.id})">+</div>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        // 5. Рендеринг кухни
-        function renderKitchen() {
-            // Отображение ингредиентов из инвентаря
-            const ingredientsList = document.getElementById('ingredientsList');
-            const selectedIngredients = document.getElementById('selectedIngredients');
-            
-            ingredientsList.innerHTML = '';
-            selectedIngredients.innerHTML = '';
-            
-            // Получаем только еду из инвентаря (не технику)
-            const foodItems = Object.keys(inventory).filter(id => {
-                const item = db.find(p => p.id == id);
-                return item && item.cat !== 'tech';
-            });
-            
-            if (foodItems.length === 0) {
-                ingredientsList.innerHTML = '<div style="color: var(--tg-hint); font-size: 12px;">Купите продукты в магазине</div>';
-            } else {
-                foodItems.forEach(id => {
-                    const item = db.find(p => p.id == id);
-                    const inventoryItem = inventory[id];
-                    
-                    // Проверяем срок годности
-                    let isExpired = false;
-                    if (item.shelfLife) {
-                        const daysPassed = Math.floor((Date.now() - inventoryItem.purchaseDate) / (1000 * 60 * 60 * 24));
-                        if (daysPassed >= item.shelfLife) {
-                            isExpired = true;
-                        }
-                    }
-                    
-                    const chip = document.createElement('div');
-                    chip.className = `ingredient-chip ${isExpired ? 'disabled' : ''} ${selectedIngredientsForCooking.includes(id) ? 'selected' : ''}`;
-                    chip.innerHTML = `${item.name} ${isExpired ? '⚠️' : ''}`;
-                    chip.onclick = () => toggleIngredient(id);
-                    ingredientsList.appendChild(chip);
-                });
-            }
-            
-            // Отображение выбранных ингредиентов
-            if (selectedIngredientsForCooking.length > 0) {
-                selectedIngredientsForCooking.forEach(id => {
-                    const item = db.find(p => p.id == id);
-                    const chip = document.createElement('div');
-                    chip.className = 'ingredient-chip selected';
-                    chip.innerHTML = item.name;
-                    selectedIngredients.appendChild(chip);
-                });
-            } else {
-                selectedIngredients.innerHTML = '<div style="color: var(--tg-hint); font-size: 12px;">Выберите ингредиенты выше</div>';
-            }
-            
-            // Отображение моих блюд
-            const myDishesEl = document.getElementById('myDishes');
-            myDishesEl.innerHTML = '';
-            
-            if (myDishes.length === 0) {
-                myDishesEl.innerHTML = '<div style="color: var(--tg-hint); font-size: 12px; text-align: center; padding: 20px;">Вы еще не приготовили ни одного блюда</div>';
-            } else {
-                myDishes.forEach((dish, index) => {
-                    const dishCard = document.createElement('div');
-                    dishCard.className = 'dish-card';
-                    
-                    let statusHTML = '';
-                    let buttonHTML = '';
-                    
-                    if (dish.status === 'available') {
-                        statusHTML = '<div class="dish-status">Готово к продаже</div>';
-                        buttonHTML = `<button class="sell-btn" onclick="sellDish(${index})">Выставить (${dish.price} ₽)</button>`;
-                    } else if (dish.status === 'on_sale') {
-                        statusHTML = '<div class="dish-status on-sale">На продаже...</div>';
-                        buttonHTML = '';
-                    } else if (dish.status === 'sold') {
-                        statusHTML = '<div class="dish-status sold">✅ Продано!</div>';
-                        buttonHTML = '';
-                    } else if (dish.status === 'stolen') {
-                        statusHTML = '<div class="dish-status stolen">🚨 Украдено!</div>';
-                        buttonHTML = '';
-                    }
-                    
-                    dishCard.innerHTML = `
-                        <div class="dish-info">
-                            <div class="dish-name">${dish.name}</div>
-                            <div class="dish-ingredients">${dish.ingredientNames.join(', ')}</div>
-                            ${statusHTML}
-                        </div>
-                        ${buttonHTML}
-                    `;
-                    myDishesEl.appendChild(dishCard);
-                });
-            }
-        }
-
-        function toggleIngredient(id) {
-            const index = selectedIngredientsForCooking.indexOf(id);
-            if (index > -1) {
-                selectedIngredientsForCooking.splice(index, 1);
-            } else {
-                selectedIngredientsForCooking.push(id);
-            }
-            renderKitchen();
-        }
-
-        // 6. Приготовление блюда
-        window.cookDish = function() {
-            const dishName = document.getElementById('dishNameInput').value.trim();
-            
-            if (!dishName) {
-                showToast('Введите название блюда', 'warning');
-                return;
-            }
-            
-            if (selectedIngredientsForCooking.length === 0) {
-                showToast('Выберите хотя бы один ингредиент', 'warning');
-                return;
-            }
-            
-            // Рассчитываем цену (сумма цен ингредиентов * 1.5)
-            let totalCost = 0;
-            const ingredientNames = [];
-            
-            selectedIngredientsForCooking.forEach(id => {
-                const item = db.find(p => p.id == id);
-                totalCost += item.price;
-                ingredientNames.push(item.name);
-                
-                // Удаляем использованный ингредиент из инвентаря
-                delete inventory[id];
-            });
-            
-            const dishPrice = Math.round(totalCost * 1.5);
-            
-            const newDish = {
-                name: dishName,
-                ingredients: [...selectedIngredientsForCooking],
-                ingredientNames: ingredientNames,
-                price: dishPrice,
-                status: 'available', // available, on_sale, sold, stolen
-                createdAt: Date.now()
-            };
-            
-            myDishes.push(newDish);
-            selectedIngredientsForCooking = [];
-            document.getElementById('dishNameInput').value = '';
-            
-            tg.HapticFeedback.notificationOccurred('success');
-            showToast(`Блюдо "${dishName}" приготовлено!`, 'success');
-            renderKitchen();
-        }
-
-        // 7. Продажа блюда
-        window.sellDish = function(index) {
-            const dish = myDishes[index];
-            dish.status = 'on_sale';
-            renderKitchen();
-            
-            showToast('Блюдо выставлено на продажу!', 'success');
-            
-            // ИИ покупатель/вор (через 3-7 секунд)
-            const waitTime = 3000 + Math.random() * 4000;
-            
-            setTimeout(() => {
-                const random = Math.random();
-                
-                // 70% шанс купить, 10% шанс украсть, 20% ничего не произошло
-                if (random < 0.7) {
-                    // Покупка
-                    dish.status = 'sold';
-                    userMoney += dish.price;
-                    updateBalance();
-                    showNotification('💰', 'Продано!', `Ваше блюдо "${dish.name}" купили за ${dish.price} ₽`);
-                    tg.HapticFeedback.notificationOccurred('success');
-                } else if (random < 0.8) {
-                    // Кража
-                    dish.status = 'stolen';
-                    showNotification('🚨', 'Ограблено!', `Ваше блюдо "${dish.name}" украли!`);
-                    tg.HapticFeedback.notificationOccurred('error');
-                } else {
-                    // Вернуть обратно
-                    dish.status = 'available';
-                    showToast('Никто не купил. Попробуйте еще раз', 'warning');
-                }
-                
-                renderKitchen();
-            }, waitTime);
-        }
-
-        // 8. Логика Корзины
-        function addItem(id) {
-            tg.HapticFeedback.impactOccurred('medium');
-
-            if (!cart[id]) cart[id] = 0;
-            cart[id]++;
-            
-            updateCardState(id);
-            updateMainButton();
-            
-            if (cart[id] === 1) showToast('Добавлено в корзину', 'success');
-        }
-
-        function minusItem(id) {
-            tg.HapticFeedback.impactOccurred('light');
-
-            if (cart[id]) cart[id]--;
-            if (cart[id] <= 0) delete cart[id];
-
-            updateCardState(id);
-            updateMainButton();
-        }
-
-        function updateCardState(id) {
-            const count = cart[id] || 0;
-            const addBtn = document.getElementById(`add-${id}`);
-            const counter = document.getElementById(`counter-${id}`);
-            const val = document.getElementById(`val-${id}`);
-
-            if (addBtn && counter && val) {
-                if (count > 0) {
-                    addBtn.style.display = 'none';
-                    counter.classList.add('show');
-                    val.innerText = count;
-                } else {
-                    addBtn.style.display = 'flex';
-                    counter.classList.remove('show');
-                }
-            }
-        }
-
-        // 9. Категории
-        const categories = ['all', 'burgers', 'pizza', 'sushi', 'drinks', 'tech', 'kitchen'];
-        let currentCategoryIndex = 0;
-
-        window.setCategory = (cat, btnElement) => {
+        /**
+         * УПРАВЛЕНИЕ НАВИГАЦИЕЙ
+         * Функция переключения между страницами приложения
+         */
+        function switchPage(pageName) {
+            // Вибрация при переключении
             tg.HapticFeedback.selectionChanged();
 
-            currentCat = cat;
-            currentCategoryIndex = categories.indexOf(cat);
-            
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            if (btnElement) {
-                btnElement.classList.add('active');
-            } else {
-                // Если кнопка не передана (при свайпе), находим её
-                const tabs = document.querySelectorAll('.tab');
-                tabs[currentCategoryIndex].classList.add('active');
-            }
-
-            render();
-            
-            // Прокручиваем к активной вкладке
-            scrollToActiveTab();
-        }
-
-        function scrollToActiveTab() {
-            const activeTab = document.querySelector('.tab.active');
-            if (activeTab) {
-                activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
-        }
-
-        // 9.1 Свайп для переключения категорий
-        let touchStartX = 0;
-        let touchEndX = 0;
-        let touchStartY = 0;
-        let touchEndY = 0;
-        const swipeThreshold = 75; // Минимальное расстояние для свайпа
-        let hasShownSwipeHint = false;
-
-        function handleSwipe() {
-            const swipeDistanceX = touchEndX - touchStartX;
-            const swipeDistanceY = Math.abs(touchEndY - touchStartY);
-            
-            // Проверяем что это горизонтальный свайп (не вертикальная прокрутка)
-            if (swipeDistanceY < 100 && Math.abs(swipeDistanceX) > swipeThreshold) {
-                if (swipeDistanceX > 0 && currentCategoryIndex > 0) {
-                    // Свайп вправо - предыдущая категория
-                    currentCategoryIndex--;
-                    setCategory(categories[currentCategoryIndex]);
-                    tg.HapticFeedback.impactOccurred('light');
-                } else if (swipeDistanceX < 0 && currentCategoryIndex < categories.length - 1) {
-                    // Свайп влево - следующая категория
-                    currentCategoryIndex++;
-                    setCategory(categories[currentCategoryIndex]);
-                    tg.HapticFeedback.impactOccurred('light');
-                }
-            }
-        }
-
-        function showSwipeHint() {
-            if (!hasShownSwipeHint) {
-                const hint = document.getElementById('swipeHint');
-                hint.classList.add('show');
-                hasShownSwipeHint = true;
-                
-                setTimeout(() => {
-                    hint.classList.remove('show');
-                }, 3000);
-            }
-        }
-
-        // Добавляем обработчики свайпа на контейнер
-        const container = document.getElementById('mainContainer');
-        const kitchenCont = document.getElementById('kitchenContainer');
-
-        [container, kitchenCont].forEach(cont => {
-            cont.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-                touchStartY = e.changedTouches[0].screenY;
-            }, { passive: true });
-
-            cont.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                touchEndY = e.changedTouches[0].screenY;
-                handleSwipe();
-            }, { passive: true });
-        });
-
-        // 10. Main Button
-        function updateMainButton() {
-            let totalSum = 0;
-            let totalItems = 0;
-
-            for (const [id, qty] of Object.entries(cart)) {
-                const product = db.find(p => p.id == id);
-                if (product) {
-                    totalSum += product.price * qty;
-                    totalItems += qty;
-                }
-            }
-
-            if (totalSum > 0) {
-                if (totalSum > userMoney) {
-                    tg.MainButton.setText(`Недостаточно средств (${totalSum} ₽)`);
-                    tg.MainButton.show();
-                    tg.MainButton.disable();
-                    tg.MainButton.setParams({
-                        color: '#999999',
-                        text_color: '#ffffff'
-                    });
-                } else {
-                    tg.MainButton.setText(`Купить: ${totalSum} ₽`);
-                    tg.MainButton.show();
-                    tg.MainButton.enable();
-                    tg.MainButton.setParams({
-                        color: '#30d158',
-                        text_color: '#ffffff'
-                    });
-                }
-            } else {
-                tg.MainButton.hide();
-            }
-        }
-
-        // Обработка покупки
-        tg.MainButton.onClick(() => {
-            let totalSum = 0;
-            const purchasedItems = [];
-
-            for (const [id, qty] of Object.entries(cart)) {
-                const product = db.find(p => p.id == id);
-                if (product) {
-                    totalSum += product.price * qty;
-                    purchasedItems.push({
-                        id: product.id,
-                        name: product.name,
-                        qty: qty,
-                        price: product.price
-                    });
-                }
-            }
-
-            if (totalSum > userMoney) {
-                showToast('Недостаточно средств!', 'error');
-                return;
-            }
-
-            // Списываем деньги
-            userMoney -= totalSum;
-            updateBalance();
-
-            // Добавляем товары в инвентарь
-            purchasedItems.forEach(item => {
-                if (!inventory[item.id]) {
-                    inventory[item.id] = {
-                        purchaseDate: Date.now(),
-                        quantity: item.qty
-                    };
-                } else {
-                    inventory[item.id].quantity += item.qty;
-                }
+            // Скрываем все страницы
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.add('hidden');
             });
 
-            // Очищаем корзину
-            cart = {};
-            updateMainButton();
+            // Показываем нужную страницу
+            document.getElementById(`page-${pageName}`).classList.remove('hidden');
 
-            // Показываем уведомление
-            const itemsList = purchasedItems.map(i => `${i.name} x${i.qty}`).join(', ');
-            showNotification('🎉', 'Покупка успешна!', `Вы купили: ${itemsList}. Списано: ${totalSum} ₽`);
-            
-            tg.HapticFeedback.notificationOccurred('success');
+            // Обновляем активный пункт меню
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+        }
 
-            // Обновляем отображение
-            render();
+        /**
+         * МОДУЛЬ: УМНЫЙ КАЛЬКУЛЯТОР
+         * Парсинг и вычисление математических выражений в реальном времени
+         */
+        const calcInput = document.getElementById('calcInput');
+        const calcResult = document.getElementById('calcResult');
+
+        calcInput.addEventListener('input', function() {
+            calculateExpression(this.value);
         });
 
-        // 11. Функции уведомлений
-        function showToast(msg, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toast-msg');
-            const toastIcon = document.getElementById('toast-icon');
-            
-            toast.className = 'toast';
-            
-            if (type === 'success') {
-                toastIcon.innerText = '✅';
-                toast.classList.add('success');
-            } else if (type === 'error') {
-                toastIcon.innerText = '❌';
-                toast.classList.add('error');
-            } else if (type === 'warning') {
-                toastIcon.innerText = '⚠️';
-                toast.classList.add('warning');
+        function calculateExpression(expression) {
+            try {
+                // Заменяем ^ на ** для возведения в степень
+                let processed = expression.replace(/\^/g, '**');
+                
+                // Обрабатываем функцию sqrt()
+                processed = processed.replace(/sqrt\(([^)]+)\)/g, 'Math.sqrt($1)');
+                
+                // Проверяем на безопасность (только цифры и разрешенные символы)
+                if (/[a-zA-Z]/.test(processed.replace(/Math\.sqrt/g, '').replace(/sqrt/g, ''))) {
+                    throw new Error('Недопустимые символы');
+                }
+                
+                // Вычисляем результат
+                const result = eval(processed);
+                
+                // Проверяем на NaN и Infinity
+                if (isNaN(result) || !isFinite(result)) {
+                    throw new Error('Ошибка вычисления');
+                }
+                
+                // Округляем до 6 знаков после запятой
+                calcResult.textContent = '= ' + (Math.round(result * 1000000) / 1000000);
+                calcResult.style.color = '';
+            } catch (error) {
+                calcResult.textContent = '❌ Ошибка';
+                calcResult.style.color = '#ef4444';
             }
+        }
+
+        /**
+         * МОДУЛЬ: АНАЛИЗАТОР ТЕКСТА
+         * Подсчет символов, слов и уникальных слов в реальном времени
+         */
+        const textInput = document.getElementById('textInput');
+
+        textInput.addEventListener('input', function() {
+            analyzeText(this.value);
+        });
+
+        function analyzeText(text) {
+            // Количество символов с пробелами
+            const charCount = text.length;
+            document.getElementById('charCount').textContent = charCount;
+
+            // Количество символов без пробелов
+            const charNoSpace = text.replace(/\s/g, '').length;
+            document.getElementById('charNoSpaceCount').textContent = charNoSpace;
+
+            // Количество слов
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+            document.getElementById('wordCount').textContent = words.length;
+
+            // Количество уникальных слов
+            const uniqueWords = new Set(words.map(w => w.toLowerCase()));
+            document.getElementById('uniqueWordCount').textContent = uniqueWords.size;
+        }
+
+        function clearText() {
+            textInput.value = '';
+            analyzeText('');
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function copyResult() {
+            const stats = `
+Символов: ${document.getElementById('charCount').textContent}
+Без пробелов: ${document.getElementById('charNoSpaceCount').textContent}
+Слов: ${document.getElementById('wordCount').textContent}
+Уникальных: ${document.getElementById('uniqueWordCount').textContent}
+            `.trim();
+
+            navigator.clipboard.writeText(stats).then(() => {
+                tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert('Результат скопирован!');
+            });
+        }
+
+        /**
+         * МОДУЛЬ: ИНФО-ПАНЕЛЬ
+         * Отображение текущей даты, времени, батареи
+         */
+        function updateDateTime() {
+            const now = new Date();
             
-            toastMsg.innerText = msg;
-            toast.classList.add('visible');
-            
-            setTimeout(() => {
-                toast.classList.remove('visible');
-            }, 2000);
-        }
+            // Текущее время
+            const time = now.toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            document.getElementById('currentTime').textContent = time;
 
-        function showNotification(icon, title, message) {
-            const modal = document.getElementById('notificationModal');
-            document.getElementById('notifIcon').innerText = icon;
-            document.getElementById('notifTitle').innerText = title;
-            document.getElementById('notifMessage').innerText = message;
-            modal.classList.add('show');
-        }
+            // День недели
+            const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+            const dayName = days[now.getDay()];
+            document.getElementById('currentDay').textContent = dayName;
 
-        window.closeNotification = function() {
-            document.getElementById('notificationModal').classList.remove('show');
-        }
-
-        function updateBalance() {
-            document.getElementById('userBalance').innerText = `${userMoney} ₽`;
-        }
-
-        // 12. Проверка сроков годности (каждые 10 секунд)
-        setInterval(() => {
-            if (currentCat !== 'kitchen') {
-                render(); // Обновляем товары для отображения актуальных сроков
+            // Дни до выходных
+            const currentDay = now.getDay();
+            let daysToWeekend;
+            if (currentDay === 0 || currentDay === 6) {
+                daysToWeekend = 'Сегодня! 🎉';
+            } else {
+                daysToWeekend = (6 - currentDay) + ' дн.';
             }
-        }, 10000);
+            document.getElementById('daysToWeekend').textContent = daysToWeekend;
+        }
 
-        // Загрузка
-        window.onload = () => {
-            setTimeout(() => {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                    // Показываем подсказку о свайпе
-                    setTimeout(() => showSwipeHint(), 1000);
-                }, 300);
-            }, 800);
-            render();
-            updateBalance();
-        };
+        // Обновляем каждую секунду
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
 
+        // Battery Status API
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(battery => {
+                function updateBattery() {
+                    const level = Math.round(battery.level * 100);
+                    const charging = battery.charging ? '⚡' : '🔋';
+                    document.getElementById('batteryLevel').textContent = `${charging} ${level}%`;
+                }
+                
+                battery.addEventListener('levelchange', updateBattery);
+                battery.addEventListener('chargingchange', updateBattery);
+                updateBattery();
+            });
+        }
+
+        /**
+         * МОДУЛЬ: TELEGRAM DATA
+         * Отображение данных текущего пользователя
+         */
+        function loadUserData() {
+            const user = tg.initDataUnsafe?.user;
+            
+            if (user) {
+                // Имя
+                const fullName = `${user.first_name} ${user.last_name || ''}`.trim();
+                document.getElementById('userName').textContent = fullName;
+
+                // Username
+                const username = user.username ? `@${user.username}` : 'Нет username';
+                document.getElementById('userUsername').textContent = username;
+
+                // ID
+                document.getElementById('userId').textContent = user.id;
+
+                // Язык
+                const lang = user.language_code?.toUpperCase() || 'RU';
+                document.getElementById('userLang').textContent = lang;
+
+                // Фото (если доступно через Telegram)
+                if (user.photo_url) {
+                    document.getElementById('userPhoto').innerHTML = `<img src="${user.photo_url}" class="w-full h-full object-cover rounded-full">`;
+                    document.getElementById('userAvatar').innerHTML = `<img src="${user.photo_url}" class="w-full h-full object-cover rounded-full">`;
+                } else {
+                    // Инициалы
+                    const initials = user.first_name[0] + (user.last_name ? user.last_name[0] : '');
+                    document.getElementById('userPhoto').textContent = initials;
+                    document.getElementById('userAvatar').textContent = initials;
+                }
+            }
+        }
+
+        loadUserData();
+
+        /**
+         * МОДУЛЬ: HAPTIC FEEDBACK
+         * Тестирование различных типов вибрации
+         */
+        function hapticImpact(style) {
+            tg.HapticFeedback.impactOccurred(style);
+        }
+
+        function hapticNotification(type) {
+            tg.HapticFeedback.notificationOccurred(type);
+        }
+
+        /**
+         * МОДУЛЬ: ИГРОВОЙ КЛИКЕР
+         * Счетчик нажатий с анимацией и сохранением в localStorage
+         */
+        let clickCount = parseInt(localStorage.getItem('clickCount') || '0');
+        document.getElementById('clickCount').textContent = clickCount;
+        document.getElementById('totalClicks').textContent = clickCount;
+
+        const clickerBtn = document.getElementById('clickerBtn');
+
+        clickerBtn.addEventListener('click', function(e) {
+            // Увеличиваем счетчик
+            clickCount++;
+            document.getElementById('clickCount').textContent = clickCount;
+            document.getElementById('totalClicks').textContent = clickCount;
+
+            // Сохраняем в localStorage
+            localStorage.setItem('clickCount', clickCount);
+
+            // Вибрация
+            tg.HapticFeedback.impactOccurred('light');
+
+            // Анимация числа в месте клика
+            const rect = clickerBtn.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const clickNum = document.createElement('div');
+            clickNum.className = 'click-number';
+            clickNum.textContent = '+1';
+            clickNum.style.left = x + 'px';
+            clickNum.style.top = y + 'px';
+            clickNum.style.color = '#ffffff';
+
+            clickerBtn.appendChild(clickNum);
+
+            // Удаляем элемент после анимации
+            setTimeout(() => clickNum.remove(), 1000);
+        });
+
+        /**
+         * МОДУЛЬ: НАСТРОЙКИ
+         * Сброс данных приложения
+         */
+        function resetApp() {
+            tg.showConfirm('Вы уверены, что хотите сбросить все данные?', (confirmed) => {
+                if (confirmed) {
+                    localStorage.clear();
+                    clickCount = 0;
+                    document.getElementById('clickCount').textContent = '0';
+                    document.getElementById('totalClicks').textContent = '0';
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert('Данные сброшены!');
+                }
+            });
+        }
+
+        /**
+         * УПРАВЛЕНИЕ MAIN BUTTON И BACK BUTTON
+         * Используем кнопки SDK для управления
+         */
+        
+        // Скрываем MainButton по умолчанию
+        tg.MainButton.hide();
+
+        // BackButton можно использовать для выхода на главную
+        tg.BackButton.onClick(() => {
+            switchPage('home');
+        });
+
+        console.log('✅ SuperApp загружен и готов к работе!');
     </script>
 </body>
 </html>
