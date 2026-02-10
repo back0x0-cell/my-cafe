@@ -3,205 +3,522 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Mini App Shop</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>Aetheris Nexus OS</title>
     <style>
+        /* =========================================
+           CSS STYLES (ОФОРМЛЕНИЕ)
+           =========================================
+        */
         :root {
-            --accent: var(--tg-theme-button-color, #00d2ff);
-            --bg: var(--tg-theme-bg-color, #050505);
-            --text: var(--tg-theme-text-color, #ffffff);
-            --sec-bg: var(--tg-theme-secondary-bg-color, #1a1a1a);
-            --border: rgba(0, 210, 255, 0.2);
+            /* Переменные цветов из темы Telegram */
+            --tg-bg: var(--tg-theme-bg-color, #fff);
+            --tg-text: var(--tg-theme-text-color, #000);
+            --tg-hint: var(--tg-theme-hint-color, #999);
+            --tg-link: var(--tg-theme-link-color, #2481cc);
+            --tg-btn: var(--tg-theme-button-color, #2481cc);
+            --tg-btn-text: var(--tg-theme-button-text-color, #fff);
+            --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #efeff3);
+            
+            /* Свои цвета */
+            --orange: #ff9f0a;
+            --green: #30d158;
+            --red: #ff453a;
+            --card-radius: 14px;
+            --anim-speed: 0.25s;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
-            background-color: var(--bg); color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding-bottom: 100px; overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
+            user-select: none; /* Запрет выделения текста как в приложении */
+            -webkit-tap-highlight-color: transparent;
         }
-        /* Анимация частиц на фоне */
-        #particles-js { position: fixed; width: 100%; height: 100%; z-index: -1; opacity: 0.3; }
+
+        /* --- ЗАГРУЗЧИК (PRELOADER) --- */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--tg-bg);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--tg-secondary-bg);
+            border-top: 4px solid var(--tg-btn);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- ШАПКА --- */
+        header {
+            padding: 10px 16px;
+            position: sticky;
+            top: 0;
+            background: var(--tg-bg);
+            z-index: 100;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .user-balance {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--tg-hint);
+            background: var(--tg-secondary-bg);
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        /* --- НАВИГАЦИЯ (КАТЕГОРИИ) --- */
+        .tabs-container {
+            padding: 10px 0;
+            background: var(--tg-bg);
+            position: sticky;
+            top: 50px; /* Высота хедера */
+            z-index: 99;
+            overflow-x: auto;
+            white-space: nowrap;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .tabs-container::-webkit-scrollbar { display: none; }
         
-       .header { padding: 30px 20px; text-align: center; background: linear-gradient(to bottom, var(--sec-bg), transparent); }
-       .header h1 { margin: 0; font-size: 1.8rem; letter-spacing: 4px; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
-        
-        /* Навигация */
-       .nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; background: var(--sec-bg); sticky: top; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
-       .nav-item { padding: 15px 5px; text-align: center; font-size: 0.7rem; font-weight: bold; color: #888; cursor: pointer; transition: 0.3s; }
-       .nav-item.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: rgba(0, 210, 255, 0.05); }
+        .tabs-inner {
+            padding: 0 16px;
+            display: flex;
+            gap: 10px;
+        }
 
-       .view { display: none; padding: 20px; animation: slideIn 0.4s ease; }
-       .view.active { display: block; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            background-color: var(--tg-secondary-bg);
+            color: var(--tg-text);
+            border: none;
+            transition: all var(--anim-speed);
+            cursor: pointer;
+        }
+        .tab.active {
+            background-color: var(--tg-btn);
+            color: var(--tg-btn-text);
+            transform: scale(1.05);
+        }
 
-        /* Карточки */
-       .card { background: var(--sec-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 15px; position: relative; overflow: hidden; }
-       .card h3 { margin: 0 0 10px 0; font-size: 1.1rem; color: var(--accent); }
-       .card p { margin: 0; font-size: 0.85rem; opacity: 0.8; line-height: 1.5; }
+        /* --- СЕТКА ТОВАРОВ --- */
+        .container {
+            padding: 16px;
+            padding-bottom: 100px; /* Место для MainButton */
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+            gap: 12px;
+        }
 
-        /* Прогресс-бары */
-       .progress-container { background: #000; height: 8px; border-radius: 4px; margin: 15px 0; overflow: hidden; }
-       .progress-bar { background: var(--accent); height: 100%; width: 0%; transition: 1s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
+        .card {
+            background: var(--tg-secondary-bg);
+            border-radius: var(--card-radius);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.1s;
+        }
+        .card:active { transform: scale(0.97); }
 
-        /* Сетка магазина */
-       .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-       .shop-item { background: var(--sec-bg); border-radius: 12px; padding: 15px; text-align: center; border: 1px solid transparent; transition: 0.3s; }
-       .shop-item.selected { border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
-       .price-tag { display: block; margin-top: 10px; font-weight: bold; color: var(--accent); }
+        .card-img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            background-color: rgba(0,0,0,0.05);
+        }
 
-        /* Кнопки действий */
-       .btn-main { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--accent); color: #000; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; }
-       .btn-main:active { transform: scale(0.96); }
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+        .card-desc {
+            font-size: 11px;
+            color: var(--tg-hint);
+            margin-bottom: 10px;
+            flex-grow: 1; /* Толкает цену вниз */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
 
-        /* Терминал */
-       .terminal { background: #000; color: #0f0; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.8rem; height: 150px; overflow-y: auto; border: 1px solid #0f0; }
+        .card-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
 
-       .footer { position: fixed; bottom: 0; width: 100%; padding: 15px 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-       .balance { font-weight: bold; color: var(--accent); }
+        .price {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        /* --- КНОПКИ УПРАВЛЕНИЯ КОЛИЧЕСТВОМ --- */
+        .btn-add {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--tg-btn);
+            color: var(--tg-btn-text);
+            border: none;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .counter-wrap {
+            display: none; /* Скрыто по умолчанию */
+            align-items: center;
+            background: var(--tg-btn);
+            border-radius: 16px;
+            height: 32px;
+            padding: 0 2px;
+        }
+        .counter-wrap.show { display: flex; }
+
+        .btn-minus, .btn-plus {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--tg-btn-text);
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .count-value {
+            color: var(--tg-btn-text);
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* --- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ (TOAST) --- */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 2000;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast.visible {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Анимация появления товаров */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card { animation: fadeIn 0.4s ease forwards; }
+
     </style>
 </head>
 <body>
-    <div id="particles-js"></div>
-    <div class="header">
-        <h1 id="main-title">AETHERIS NEXUS</h1>
-        <p id="user-status" style="font-size: 0.8rem; opacity: 0.6; margin-top: 5px;">Инициализация...</p>
+
+    <div id="loader">
+        <div class="spinner"></div>
     </div>
 
-    <div class="nav-grid">
-        <div class="nav-item active" onclick="showView('dash')">ОБЗОР</div>
-        <div class="nav-item" onclick="showView('shop')">МАРКЕТ</div>
-        <div class="nav-item" onclick="showView('map')">СЕКТОРЫ</div>
-        <div class="nav-item" onclick="showView('inv')">СКЛАД</div>
-        <div class="nav-item" onclick="showView('term')">ЛОГИ</div>
-        <div class="nav-item" onclick="showView('sets')">ОС</div>
+    <div id="toast" class="toast">
+        <span>✅</span> <span id="toast-msg">Товар добавлен</span>
     </div>
 
-    <div id="dash" class="view active">
-        <div class="card">
-            <h3>Уровень Синхронизации</h3>
-            <div class="progress-container"><div class="progress-bar" style="width: 65%"></div></div>
-            <p>Статус: Командор. До следующего ранга: 1,400 XP</p>
+    <header>
+        <div class="logo">🚀 MarketApp</div>
+        <div class="user-balance" id="userName">Гость</div>
+    </header>
+
+    <div class="tabs-container">
+        <div class="tabs-inner" id="tabsList">
+            <button class="tab active" onclick="setCategory('all', this)">Все</button>
+            <button class="tab" onclick="setCategory('burgers', this)">Бургеры</button>
+            <button class="tab" onclick="setCategory('pizza', this)">Пицца</button>
+            <button class="tab" onclick="setCategory('sushi', this)">Суши</button>
+            <button class="tab" onclick="setCategory('drinks', this)">Напитки</button>
+            <button class="tab" onclick="setCategory('tech', this)">Техника</button>
         </div>
-        <div class="card">
-            <h3>Активные процессы</h3>
-            <p>• Сканирование аномалий в секторе 4... [OK]</p>
-            <p>• Сборка нанитов в лабе... [45%]</p>
-        </div>
-        <button class="btn-main" onclick="tgAction('Daily Reward', 'Bonus Collected')">ПОЛУЧИТЬ ЕЖЕДНЕВНЫЙ БОНУС</button>
     </div>
 
-    <div id="shop" class="view">
-        <div class="shop-grid">
-            <div class="shop-item" onclick="selectItem(this, 'Ядро ИИ', 500)">
-                <h3>Ядро ИИ</h3>
-                <span class="price-tag">500 ⚡</span>
+    <div class="container">
+        <div class="grid" id="productsGrid">
             </div>
-            <div class="shop-item" onclick="selectItem(this, 'Щит Пустоты', 1200)">
-                <h3>Щит Пустоты</h3>
-                <span class="price-tag">1200 ⚡</span>
-            </div>
-            <div class="shop-item" onclick="selectItem(this, 'Разлом', 3000)">
-                <h3>Разлом</h3>
-                <span class="price-tag">3000 ⚡</span>
-            </div>
-            <div class="shop-item" onclick="selectItem(this, 'Дрон-разведчик', 800)">
-                <h3>Дрон</h3>
-                <span class="price-tag">800 ⚡</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="map" class="view">
-        <div class="card" onclick="tgAction('Warp', 'Mars Outpost')">
-            <h3>Аванпост Марс</h3>
-            <p>Сложность: Низкая. Шанс добычи: 15%</p>
-            <button class="btn-main" style="background: transparent; color: var(--accent); border: 1px solid var(--accent);">ПРЫЖОК</button>
-        </div>
-        <div class="card" onclick="tgAction('Warp', 'Black Hole Edge')">
-            <h3>Край Черной Дыры</h3>
-            <p>Сложность: ЭКСТРЕМАЛЬНАЯ. Шанс добычи: 85%</p>
-            <button class="btn-main">НАЧАТЬ ЭКСПЕДИЦИЮ</button>
-        </div>
-    </div>
-
-    <div id="term" class="view">
-        <div class="terminal" id="term-out">
-            > Initializing Aetheris Kernel...<br>
-            > Checking secure protocols...<br>
-            > Nexus Link: STABLE.<br>
-        </div>
-        <button class="btn-main" onclick="runDiagnostic()">ЗАПУСТИТЬ ДИАГНОСТИКУ</button>
-    </div>
-
-    <div class="footer">
-        <div class="balance">Энергия: <span id="balance-val">2,450</span> ⚡</div>
-        <div style="font-size: 0.7rem; opacity: 0.5;">v4.0.1-STABLE</div>
     </div>
 
     <script>
+        /* =========================================
+           JAVASCRIPT LOGIC (ФУНКЦИОНАЛ)
+           =========================================
+        */
+
+        // 1. Инициализация Telegram API
         const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.enableClosingConfirmation();
+        tg.expand(); // На весь экран
 
-        // Данные пользователя
-        if(tg.initDataUnsafe.user) {
-            document.getElementById('user-status').innerText = `Сессия: ${tg.initDataUnsafe.user.username} | ID: ${tg.initDataUnsafe.user.id}`;
+        // Настройка цветов системных баров
+        tg.setHeaderColor(tg.themeParams.bg_color || '#ffffff');
+        tg.setBackgroundColor(tg.themeParams.bg_color || '#ffffff');
+
+        // Вывод имени пользователя
+        const userEl = document.getElementById('userName');
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            userEl.innerText = tg.initDataUnsafe.user.first_name;
         }
 
-        function showView(id) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            event.currentTarget.classList.add('active');
-            tg.HapticFeedback.impactOccurred('medium');
-        }
+        // 2. Большая база данных товаров (Mock Data)
+        const db = [
+            // Бургеры
+            { id: 101, cat: 'burgers', name: 'Чизбургер XL', price: 290, desc: 'Двойная котлета, чеддер, соус', img: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png' },
+            { id: 102, cat: 'burgers', name: 'Биг Тейсти', price: 350, desc: 'Классический вкус, свежие овощи', img: 'https://cdn-icons-png.flaticon.com/512/877/877951.png' },
+            { id: 103, cat: 'burgers', name: 'Чикен Премьер', price: 270, desc: 'Куриное филе в панировке', img: 'https://cdn-icons-png.flaticon.com/512/1057/1057356.png' },
+            // Пицца
+            { id: 201, cat: 'pizza', name: 'Пепперони', price: 590, desc: 'Острая колбаска, моцарелла', img: 'https://cdn-icons-png.flaticon.com/512/3132/3132693.png' },
+            { id: 202, cat: 'pizza', name: '4 Сыра', price: 650, desc: 'Пармезан, чеддер, дорблю', img: 'https://cdn-icons-png.flaticon.com/512/1404/1404945.png' },
+            { id: 203, cat: 'pizza', name: 'Маргарита', price: 450, desc: 'Томаты, базилик, сыр', img: 'https://cdn-icons-png.flaticon.com/512/3595/3595455.png' },
+            { id: 204, cat: 'pizza', name: 'Диабло', price: 620, desc: 'Очень острая с халапеньо', img: 'https://cdn-icons-png.flaticon.com/512/6978/6978255.png' },
+            // Суши
+            { id: 301, cat: 'sushi', name: 'Филадельфия', price: 550, desc: 'Лосось, сливочный сыр', img: 'https://cdn-icons-png.flaticon.com/512/2252/2252075.png' },
+            { id: 302, cat: 'sushi', name: 'Калифорния', price: 490, desc: 'Краб, авокадо, икра', img: 'https://cdn-icons-png.flaticon.com/512/3183/3183424.png' },
+            { id: 303, cat: 'sushi', name: 'Маки с огурцом', price: 190, desc: 'Классические роллы', img: 'https://cdn-icons-png.flaticon.com/512/1900/1900683.png' },
+            // Напитки
+            { id: 401, cat: 'drinks', name: 'Кола 0.5', price: 120, desc: 'Холодная газировка', img: 'https://cdn-icons-png.flaticon.com/512/2405/2405597.png' },
+            { id: 402, cat: 'drinks', name: 'Американо', price: 150, desc: 'Горячий зерновой кофе', img: 'https://cdn-icons-png.flaticon.com/512/924/924514.png' },
+            { id: 403, cat: 'drinks', name: 'Милкшейк', price: 250, desc: 'Ванильный вкус', img: 'https://cdn-icons-png.flaticon.com/512/3081/3081162.png' },
+            // Техника (для теста категорий)
+            { id: 501, cat: 'tech', name: 'AirPods Pro', price: 20000, desc: 'Шумоподавление', img: 'https://cdn-icons-png.flaticon.com/512/5906/5906169.png' },
+            { id: 502, cat: 'tech', name: 'PowerBank', price: 3000, desc: '10000 mAh', img: 'https://cdn-icons-png.flaticon.com/512/4507/4507563.png' },
+        ];
 
-        let selected = null;
-        function selectItem(el, name, price) {
-            document.querySelectorAll('.shop-item').forEach(i => i.classList.remove('selected'));
-            el.classList.add('selected');
-            selected = { name, price };
+        // 3. Состояние приложения
+        let cart = {}; // Хранит { id: кол-во }
+        let currentCat = 'all';
+
+        // 4. Логика Рендеринга
+        const grid = document.getElementById('productsGrid');
+
+        function render() {
+            grid.innerHTML = ''; // Очистка
             
-            tg.MainButton.setText(`КУПИТЬ: ${name} (${price} ⚡)`);
-            tg.MainButton.show();
-            tg.MainButton.setParams({ color: "#00d2ff", text_color: "#000000" });
+            // Фильтрация
+            const filtered = currentCat === 'all' 
+                ? db 
+                : db.filter(item => item.cat === currentCat);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 20px; color: var(--tg-hint);">В этой категории пусто 😔</div>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                const count = cart[item.id] || 0;
+                
+                // Создаем элемент
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <img src="${item.img}" class="card-img" alt="${item.name}">
+                    <div class="card-title">${item.name}</div>
+                    <div class="card-desc">${item.desc}</div>
+                    <div class="card-bottom">
+                        <div class="price">${item.price} ₽</div>
+                        
+                        <button class="btn-add" id="add-${item.id}" 
+                                onclick="addItem(${item.id})" 
+                                style="display: ${count > 0 ? 'none' : 'flex'}">
+                            +
+                        </button>
+
+                        <div class="counter-wrap ${count > 0 ? 'show' : ''}" id="counter-${item.id}">
+                            <div class="btn-minus" onclick="minusItem(${item.id})">−</div>
+                            <div class="count-value" id="val-${item.id}">${count}</div>
+                            <div class="btn-plus" onclick="addItem(${item.id})">+</div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
-        tg.MainButton.onClick(() => {
-            if(selected) {
-                tgAction('Purchase', selected.name);
+        // 5. Логика Корзины
+        function addItem(id) {
+            // Вибрация (Haptic Feedback)
+            tg.HapticFeedback.impactOccurred('medium');
+
+            if (!cart[id]) cart[id] = 0;
+            cart[id]++;
+            
+            // Обновляем UI без перерисовки всего списка (оптимизация)
+            updateCardState(id);
+            updateMainButton();
+            
+            if (cart[id] === 1) showToast('Добавлено в корзину');
+        }
+
+        function minusItem(id) {
+            tg.HapticFeedback.impactOccurred('light');
+
+            if (cart[id]) cart[id]--;
+            if (cart[id] <= 0) delete cart[id];
+
+            updateCardState(id);
+            updateMainButton();
+        }
+
+        // Обновление конкретной карточки
+        function updateCardState(id) {
+            const count = cart[id] || 0;
+            const addBtn = document.getElementById(`add-${id}`);
+            const counter = document.getElementById(`counter-${id}`);
+            const val = document.getElementById(`val-${id}`);
+
+            // Если элементы есть в DOM (мы в нужной категории)
+            if (addBtn && counter && val) {
+                if (count > 0) {
+                    addBtn.style.display = 'none';
+                    counter.classList.add('show');
+                    val.innerText = count;
+                } else {
+                    addBtn.style.display = 'flex';
+                    counter.classList.remove('show');
+                }
+            }
+        }
+
+        // 6. Категории
+        window.setCategory = (cat, btnElement) => {
+            // Вибрация смены табов
+            tg.HapticFeedback.selectionChanged();
+
+            currentCat = cat;
+            
+            // Смена активной кнопки
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            render();
+        }
+
+        // 7. Main Button (Главная кнопка снизу)
+        function updateMainButton() {
+            let totalSum = 0;
+            let totalItems = 0;
+
+            // Считаем сумму
+            for (const [id, qty] of Object.entries(cart)) {
+                const product = db.find(p => p.id == id);
+                if (product) {
+                    totalSum += product.price * qty;
+                    totalItems += qty;
+                }
+            }
+
+            if (totalSum > 0) {
+                tg.MainButton.setText(`Оформить заказ: ${totalSum} ₽`);
+                tg.MainButton.show();
+                tg.MainButton.enable();
+                tg.MainButton.setParams({
+                    color: '#2481cc', // Цвет кнопки
+                    text_color: '#ffffff'
+                });
+            } else {
                 tg.MainButton.hide();
             }
+        }
+
+        // Обработка клика по MainButton
+        tg.MainButton.onClick(() => {
+            // Формируем чек
+            let orderList = [];
+            let total = 0;
+
+            for (const [id, qty] of Object.entries(cart)) {
+                const product = db.find(p => p.id == id);
+                if (product) {
+                    orderList.push(`${product.name} x${qty} = ${product.price * qty}₽`);
+                    total += product.price * qty;
+                }
+            }
+
+            const dataToSend = {
+                order_id: Math.floor(Math.random() * 100000),
+                total_price: total,
+                items: orderList,
+                user: tg.initDataUnsafe.user
+            };
+
+            // Отправляем данные боту (как строку JSON)
+            tg.sendData(JSON.stringify(dataToSend));
         });
 
-        function tgAction(type, target) {
-            tg.HapticFeedback.notificationOccurred('success');
-            const data = {
-                op: type,
-                val: target,
-                ts: Date.now(),
-                ver: '4.0'
-            };
-            tg.sendData(JSON.stringify(data));
+        // 8. Вспомогательные функции
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.add('visible');
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 2000);
         }
 
-        function runDiagnostic() {
-            const out = document.getElementById('term-out');
-            const msgs = [
-                "> Checking memory sectors...",
-                "> CPU load: 12% [OK]",
-                "> Network latency: 45ms",
-                "> Integrity: 100%",
-                "> Ready for commands."
-            ];
-            let i = 0;
-            const timer = setInterval(() => {
-                out.innerHTML += msgs[i] + "<br>";
-                out.scrollTop = out.scrollHeight;
-                i++;
-                if(i >= msgs.length) clearInterval(timer);
-            }, 500);
-        }
+        // Имитация загрузки
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                }, 300);
+            }, 800);
+            render(); // Первый рендер
+        };
+
     </script>
 </body>
 </html>
