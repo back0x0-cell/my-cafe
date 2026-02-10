@@ -34,7 +34,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--tg-bg);
             color: var(--tg-text);
-            user-select: none; /* Запрет выделения текста как в приложении */
+            user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -78,13 +78,20 @@
             align-items: center;
             gap: 6px;
         }
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
         .user-balance {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--green);
+        }
+        .user-name {
+            font-size: 12px;
             color: var(--tg-hint);
-            background: var(--tg-secondary-bg);
-            padding: 4px 10px;
-            border-radius: 8px;
         }
 
         /* --- НАВИГАЦИЯ (КАТЕГОРИИ) --- */
@@ -92,7 +99,7 @@
             padding: 10px 0;
             background: var(--tg-bg);
             position: sticky;
-            top: 50px; /* Высота хедера */
+            top: 50px;
             z-index: 99;
             overflow-x: auto;
             white-space: nowrap;
@@ -127,11 +134,11 @@
         /* --- СЕТКА ТОВАРОВ --- */
         .container {
             padding: 16px;
-            padding-bottom: 100px; /* Место для MainButton */
+            padding-bottom: 100px;
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
 
@@ -146,6 +153,10 @@
             transition: transform 0.1s;
         }
         .card:active { transform: scale(0.97); }
+        .card.expired {
+            opacity: 0.5;
+            pointer-events: none;
+        }
 
         .card-img {
             width: 100%;
@@ -165,12 +176,29 @@
         .card-desc {
             font-size: 11px;
             color: var(--tg-hint);
-            margin-bottom: 10px;
-            flex-grow: 1; /* Толкает цену вниз */
+            margin-bottom: 6px;
+            flex-grow: 1;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+        
+        .expiry-date {
+            font-size: 10px;
+            color: var(--tg-hint);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .expiry-date.warning {
+            color: var(--orange);
+            font-weight: 600;
+        }
+        .expiry-date.expired {
+            color: var(--red);
+            font-weight: 700;
         }
 
         .card-bottom {
@@ -202,7 +230,7 @@
         }
 
         .counter-wrap {
-            display: none; /* Скрыто по умолчанию */
+            display: none;
             align-items: center;
             background: var(--tg-btn);
             border-radius: 16px;
@@ -252,6 +280,145 @@
         .toast.visible {
             transform: translateX(-50%) translateY(0);
         }
+        .toast.success { background: rgba(48, 209, 88, 0.9); }
+        .toast.error { background: rgba(255, 69, 58, 0.9); }
+        .toast.warning { background: rgba(255, 159, 10, 0.9); }
+
+        /* --- КУХНЯ --- */
+        .kitchen-container {
+            padding: 16px;
+        }
+        
+        .kitchen-section {
+            background: var(--tg-secondary-bg);
+            border-radius: var(--card-radius);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .ingredients-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .ingredient-chip {
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: var(--tg-bg);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .ingredient-chip.selected {
+            background: var(--tg-btn);
+            color: var(--tg-btn-text);
+            border-color: var(--tg-btn);
+        }
+        .ingredient-chip.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        .recipe-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid var(--tg-secondary-bg);
+            background: var(--tg-bg);
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-family: inherit;
+            color: var(--tg-text);
+        }
+        .recipe-input:focus {
+            outline: none;
+            border-color: var(--tg-btn);
+        }
+        
+        .cook-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--green);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cook-btn:active {
+            transform: scale(0.98);
+        }
+        .cook-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .my-dishes {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .dish-card {
+            background: var(--tg-bg);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dish-info {
+            flex: 1;
+        }
+        
+        .dish-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .dish-ingredients {
+            font-size: 11px;
+            color: var(--tg-hint);
+            margin-bottom: 4px;
+        }
+        
+        .dish-status {
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .dish-status.on-sale {
+            color: var(--green);
+        }
+        .dish-status.sold {
+            color: var(--tg-hint);
+        }
+        .dish-status.stolen {
+            color: var(--red);
+        }
+        
+        .sell-btn {
+            padding: 8px 16px;
+            background: var(--tg-btn);
+            color: var(--tg-btn-text);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
         /* Анимация появления товаров */
         @keyframes fadeIn {
@@ -259,6 +426,66 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .card { animation: fadeIn 0.4s ease forwards; }
+
+        /* Notification modal */
+        .notification-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        .notification-modal.show {
+            display: flex;
+        }
+        
+        .notification-content {
+            background: var(--tg-bg);
+            padding: 24px;
+            border-radius: 20px;
+            max-width: 300px;
+            text-align: center;
+            animation: scaleIn 0.3s ease;
+        }
+        
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .notification-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .notification-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .notification-message {
+            font-size: 14px;
+            color: var(--tg-hint);
+            margin-bottom: 20px;
+        }
+        
+        .notification-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--tg-btn);
+            color: var(--tg-btn-text);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
     </style>
 </head>
@@ -269,12 +496,25 @@
     </div>
 
     <div id="toast" class="toast">
-        <span>✅</span> <span id="toast-msg">Товар добавлен</span>
+        <span id="toast-icon">✅</span> <span id="toast-msg">Товар добавлен</span>
+    </div>
+
+    <!-- Модальное окно уведомлений -->
+    <div id="notificationModal" class="notification-modal">
+        <div class="notification-content">
+            <div class="notification-icon" id="notifIcon">🎉</div>
+            <div class="notification-title" id="notifTitle">Успех!</div>
+            <div class="notification-message" id="notifMessage">Покупка совершена</div>
+            <button class="notification-btn" onclick="closeNotification()">OK</button>
+        </div>
     </div>
 
     <header>
         <div class="logo">🚀 MarketApp</div>
-        <div class="user-balance" id="userName">Гость</div>
+        <div class="user-info">
+            <div class="user-balance" id="userBalance">1000 ₽</div>
+            <div class="user-name" id="userName">Гость</div>
+        </div>
     </header>
 
     <div class="tabs-container">
@@ -285,12 +525,37 @@
             <button class="tab" onclick="setCategory('sushi', this)">Суши</button>
             <button class="tab" onclick="setCategory('drinks', this)">Напитки</button>
             <button class="tab" onclick="setCategory('tech', this)">Техника</button>
+            <button class="tab" onclick="setCategory('kitchen', this)">🍳 Кухня</button>
         </div>
     </div>
 
-    <div class="container">
-        <div class="grid" id="productsGrid">
-            </div>
+    <div class="container" id="mainContainer">
+        <div class="grid" id="productsGrid"></div>
+    </div>
+
+    <!-- Секция Кухни -->
+    <div class="kitchen-container" id="kitchenContainer" style="display: none;">
+        <div class="kitchen-section">
+            <div class="section-title">📦 Мои ингредиенты</div>
+            <div class="ingredients-list" id="ingredientsList"></div>
+        </div>
+
+        <div class="kitchen-section">
+            <div class="section-title">👨‍🍳 Создать блюдо</div>
+            <input type="text" 
+                   class="recipe-input" 
+                   id="dishNameInput" 
+                   placeholder="Название блюда"
+                   maxlength="30">
+            <div class="section-title" style="font-size: 14px; margin-bottom: 8px;">Выберите ингредиенты:</div>
+            <div class="ingredients-list" id="selectedIngredients"></div>
+            <button class="cook-btn" id="cookBtn" onclick="cookDish()">Приготовить блюдо</button>
+        </div>
+
+        <div class="kitchen-section">
+            <div class="section-title">🍽️ Мои блюда</div>
+            <div class="my-dishes" id="myDishes"></div>
+        </div>
     </div>
 
     <script>
@@ -301,53 +566,65 @@
 
         // 1. Инициализация Telegram API
         const tg = window.Telegram.WebApp;
-        tg.expand(); // На весь экран
+        tg.expand();
 
-        // Настройка цветов системных баров
         tg.setHeaderColor(tg.themeParams.bg_color || '#ffffff');
         tg.setBackgroundColor(tg.themeParams.bg_color || '#ffffff');
 
-        // Вывод имени пользователя
         const userEl = document.getElementById('userName');
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             userEl.innerText = tg.initDataUnsafe.user.first_name;
         }
 
-        // 2. Большая база данных товаров (Mock Data)
+        // 2. База данных товаров с сроками годности
         const db = [
-            // Бургеры
-            { id: 101, cat: 'burgers', name: 'Чизбургер XL', price: 290, desc: 'Двойная котлета, чеддер, соус', img: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png' },
-            { id: 102, cat: 'burgers', name: 'Биг Тейсти', price: 350, desc: 'Классический вкус, свежие овощи', img: 'https://cdn-icons-png.flaticon.com/512/877/877951.png' },
-            { id: 103, cat: 'burgers', name: 'Чикен Премьер', price: 270, desc: 'Куриное филе в панировке', img: 'https://cdn-icons-png.flaticon.com/512/1057/1057356.png' },
-            // Пицца
-            { id: 201, cat: 'pizza', name: 'Пепперони', price: 590, desc: 'Острая колбаска, моцарелла', img: 'https://cdn-icons-png.flaticon.com/512/3132/3132693.png' },
-            { id: 202, cat: 'pizza', name: '4 Сыра', price: 650, desc: 'Пармезан, чеддер, дорблю', img: 'https://cdn-icons-png.flaticon.com/512/1404/1404945.png' },
-            { id: 203, cat: 'pizza', name: 'Маргарита', price: 450, desc: 'Томаты, базилик, сыр', img: 'https://cdn-icons-png.flaticon.com/512/3595/3595455.png' },
-            { id: 204, cat: 'pizza', name: 'Диабло', price: 620, desc: 'Очень острая с халапеньо', img: 'https://cdn-icons-png.flaticon.com/512/6978/6978255.png' },
-            // Суши
-            { id: 301, cat: 'sushi', name: 'Филадельфия', price: 550, desc: 'Лосось, сливочный сыр', img: 'https://cdn-icons-png.flaticon.com/512/2252/2252075.png' },
-            { id: 302, cat: 'sushi', name: 'Калифорния', price: 490, desc: 'Краб, авокадо, икра', img: 'https://cdn-icons-png.flaticon.com/512/3183/3183424.png' },
-            { id: 303, cat: 'sushi', name: 'Маки с огурцом', price: 190, desc: 'Классические роллы', img: 'https://cdn-icons-png.flaticon.com/512/1900/1900683.png' },
-            // Напитки
-            { id: 401, cat: 'drinks', name: 'Кола 0.5', price: 120, desc: 'Холодная газировка', img: 'https://cdn-icons-png.flaticon.com/512/2405/2405597.png' },
-            { id: 402, cat: 'drinks', name: 'Американо', price: 150, desc: 'Горячий зерновой кофе', img: 'https://cdn-icons-png.flaticon.com/512/924/924514.png' },
-            { id: 403, cat: 'drinks', name: 'Милкшейк', price: 250, desc: 'Ванильный вкус', img: 'https://cdn-icons-png.flaticon.com/512/3081/3081162.png' },
-            // Техника (для теста категорий)
-            { id: 501, cat: 'tech', name: 'AirPods Pro', price: 20000, desc: 'Шумоподавление', img: 'https://cdn-icons-png.flaticon.com/512/5906/5906169.png' },
-            { id: 502, cat: 'tech', name: 'PowerBank', price: 3000, desc: '10000 mAh', img: 'https://cdn-icons-png.flaticon.com/512/4507/4507563.png' },
+            // Бургеры (срок 2-3 дня)
+            { id: 101, cat: 'burgers', name: 'Чизбургер XL', price: 290, desc: 'Двойная котлета, чеддер, соус', img: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png', shelfLife: 2 },
+            { id: 102, cat: 'burgers', name: 'Биг Тейсти', price: 350, desc: 'Классический вкус, свежие овощи', img: 'https://cdn-icons-png.flaticon.com/512/877/877951.png', shelfLife: 2 },
+            { id: 103, cat: 'burgers', name: 'Чикен Премьер', price: 270, desc: 'Куриное филе в панировке', img: 'https://cdn-icons-png.flaticon.com/512/1057/1057356.png', shelfLife: 3 },
+            // Пицца (срок 3-5 дней)
+            { id: 201, cat: 'pizza', name: 'Пепперони', price: 590, desc: 'Острая колбаска, моцарелла', img: 'https://cdn-icons-png.flaticon.com/512/3132/3132693.png', shelfLife: 4 },
+            { id: 202, cat: 'pizza', name: '4 Сыра', price: 650, desc: 'Пармезан, чеддер, дорблю', img: 'https://cdn-icons-png.flaticon.com/512/1404/1404945.png', shelfLife: 3 },
+            { id: 203, cat: 'pizza', name: 'Маргарита', price: 450, desc: 'Томаты, базилик, сыр', img: 'https://cdn-icons-png.flaticon.com/512/3595/3595455.png', shelfLife: 3 },
+            { id: 204, cat: 'pizza', name: 'Диабло', price: 620, desc: 'Очень острая с халапеньо', img: 'https://cdn-icons-png.flaticon.com/512/6978/6978255.png', shelfLife: 4 },
+            // Суши (срок 1 день)
+            { id: 301, cat: 'sushi', name: 'Филадельфия', price: 550, desc: 'Лосось, сливочный сыр', img: 'https://cdn-icons-png.flaticon.com/512/2252/2252075.png', shelfLife: 1 },
+            { id: 302, cat: 'sushi', name: 'Калифорния', price: 490, desc: 'Краб, авокадо, икра', img: 'https://cdn-icons-png.flaticon.com/512/3183/3183424.png', shelfLife: 1 },
+            { id: 303, cat: 'sushi', name: 'Маки с огурцом', price: 190, desc: 'Классические роллы', img: 'https://cdn-icons-png.flaticon.com/512/1900/1900683.png', shelfLife: 1 },
+            // Напитки (срок 30-90 дней)
+            { id: 401, cat: 'drinks', name: 'Кола 0.5', price: 120, desc: 'Холодная газировка', img: 'https://cdn-icons-png.flaticon.com/512/2405/2405597.png', shelfLife: 90 },
+            { id: 402, cat: 'drinks', name: 'Американо', price: 150, desc: 'Горячий зерновой кофе', img: 'https://cdn-icons-png.flaticon.com/512/924/924514.png', shelfLife: 1 },
+            { id: 403, cat: 'drinks', name: 'Милкшейк', price: 250, desc: 'Ванильный вкус', img: 'https://cdn-icons-png.flaticon.com/512/3081/3081162.png', shelfLife: 2 },
+            // Техника (без срока годности)
+            { id: 501, cat: 'tech', name: 'AirPods Pro', price: 20000, desc: 'Шумоподавление', img: 'https://cdn-icons-png.flaticon.com/512/5906/5906169.png', shelfLife: null },
+            { id: 502, cat: 'tech', name: 'PowerBank', price: 3000, desc: '10000 mAh', img: 'https://cdn-icons-png.flaticon.com/512/4507/4507563.png', shelfLife: null },
         ];
 
         // 3. Состояние приложения
-        let cart = {}; // Хранит { id: кол-во }
+        let userMoney = 1000; // Начальный баланс
+        let cart = {};
         let currentCat = 'all';
+        let inventory = {}; // Купленные товары с датами покупки
+        let myDishes = []; // Приготовленные блюда
+        let selectedIngredientsForCooking = [];
 
         // 4. Логика Рендеринга
         const grid = document.getElementById('productsGrid');
+        const mainContainer = document.getElementById('mainContainer');
+        const kitchenContainer = document.getElementById('kitchenContainer');
 
         function render() {
-            grid.innerHTML = ''; // Очистка
+            if (currentCat === 'kitchen') {
+                mainContainer.style.display = 'none';
+                kitchenContainer.style.display = 'block';
+                renderKitchen();
+                return;
+            }
+
+            mainContainer.style.display = 'block';
+            kitchenContainer.style.display = 'none';
+            grid.innerHTML = '';
             
-            // Фильтрация
             const filtered = currentCat === 'all' 
                 ? db 
                 : db.filter(item => item.cat === currentCat);
@@ -359,14 +636,32 @@
 
             filtered.forEach(item => {
                 const count = cart[item.id] || 0;
+                const inventoryItem = inventory[item.id];
                 
-                // Создаем элемент
+                let expiryHTML = '';
+                let isExpired = false;
+                
+                if (inventoryItem && item.shelfLife) {
+                    const daysPassed = Math.floor((Date.now() - inventoryItem.purchaseDate) / (1000 * 60 * 60 * 24));
+                    const daysLeft = item.shelfLife - daysPassed;
+                    
+                    if (daysLeft <= 0) {
+                        expiryHTML = '<div class="expiry-date expired">⚠️ Просрочено</div>';
+                        isExpired = true;
+                    } else if (daysLeft <= 1) {
+                        expiryHTML = `<div class="expiry-date warning">⏰ Осталось ${daysLeft} день</div>`;
+                    } else {
+                        expiryHTML = `<div class="expiry-date">📅 Годен ${daysLeft} дн.</div>`;
+                    }
+                }
+                
                 const card = document.createElement('div');
-                card.className = 'card';
+                card.className = `card ${isExpired ? 'expired' : ''}`;
                 card.innerHTML = `
                     <img src="${item.img}" class="card-img" alt="${item.name}">
                     <div class="card-title">${item.name}</div>
                     <div class="card-desc">${item.desc}</div>
+                    ${expiryHTML}
                     <div class="card-bottom">
                         <div class="price">${item.price} ₽</div>
                         
@@ -387,19 +682,204 @@
             });
         }
 
-        // 5. Логика Корзины
+        // 5. Рендеринг кухни
+        function renderKitchen() {
+            // Отображение ингредиентов из инвентаря
+            const ingredientsList = document.getElementById('ingredientsList');
+            const selectedIngredients = document.getElementById('selectedIngredients');
+            
+            ingredientsList.innerHTML = '';
+            selectedIngredients.innerHTML = '';
+            
+            // Получаем только еду из инвентаря (не технику)
+            const foodItems = Object.keys(inventory).filter(id => {
+                const item = db.find(p => p.id == id);
+                return item && item.cat !== 'tech';
+            });
+            
+            if (foodItems.length === 0) {
+                ingredientsList.innerHTML = '<div style="color: var(--tg-hint); font-size: 12px;">Купите продукты в магазине</div>';
+            } else {
+                foodItems.forEach(id => {
+                    const item = db.find(p => p.id == id);
+                    const inventoryItem = inventory[id];
+                    
+                    // Проверяем срок годности
+                    let isExpired = false;
+                    if (item.shelfLife) {
+                        const daysPassed = Math.floor((Date.now() - inventoryItem.purchaseDate) / (1000 * 60 * 60 * 24));
+                        if (daysPassed >= item.shelfLife) {
+                            isExpired = true;
+                        }
+                    }
+                    
+                    const chip = document.createElement('div');
+                    chip.className = `ingredient-chip ${isExpired ? 'disabled' : ''} ${selectedIngredientsForCooking.includes(id) ? 'selected' : ''}`;
+                    chip.innerHTML = `${item.name} ${isExpired ? '⚠️' : ''}`;
+                    chip.onclick = () => toggleIngredient(id);
+                    ingredientsList.appendChild(chip);
+                });
+            }
+            
+            // Отображение выбранных ингредиентов
+            if (selectedIngredientsForCooking.length > 0) {
+                selectedIngredientsForCooking.forEach(id => {
+                    const item = db.find(p => p.id == id);
+                    const chip = document.createElement('div');
+                    chip.className = 'ingredient-chip selected';
+                    chip.innerHTML = item.name;
+                    selectedIngredients.appendChild(chip);
+                });
+            } else {
+                selectedIngredients.innerHTML = '<div style="color: var(--tg-hint); font-size: 12px;">Выберите ингредиенты выше</div>';
+            }
+            
+            // Отображение моих блюд
+            const myDishesEl = document.getElementById('myDishes');
+            myDishesEl.innerHTML = '';
+            
+            if (myDishes.length === 0) {
+                myDishesEl.innerHTML = '<div style="color: var(--tg-hint); font-size: 12px; text-align: center; padding: 20px;">Вы еще не приготовили ни одного блюда</div>';
+            } else {
+                myDishes.forEach((dish, index) => {
+                    const dishCard = document.createElement('div');
+                    dishCard.className = 'dish-card';
+                    
+                    let statusHTML = '';
+                    let buttonHTML = '';
+                    
+                    if (dish.status === 'available') {
+                        statusHTML = '<div class="dish-status">Готово к продаже</div>';
+                        buttonHTML = `<button class="sell-btn" onclick="sellDish(${index})">Выставить (${dish.price} ₽)</button>`;
+                    } else if (dish.status === 'on_sale') {
+                        statusHTML = '<div class="dish-status on-sale">На продаже...</div>';
+                        buttonHTML = '';
+                    } else if (dish.status === 'sold') {
+                        statusHTML = '<div class="dish-status sold">✅ Продано!</div>';
+                        buttonHTML = '';
+                    } else if (dish.status === 'stolen') {
+                        statusHTML = '<div class="dish-status stolen">🚨 Украдено!</div>';
+                        buttonHTML = '';
+                    }
+                    
+                    dishCard.innerHTML = `
+                        <div class="dish-info">
+                            <div class="dish-name">${dish.name}</div>
+                            <div class="dish-ingredients">${dish.ingredientNames.join(', ')}</div>
+                            ${statusHTML}
+                        </div>
+                        ${buttonHTML}
+                    `;
+                    myDishesEl.appendChild(dishCard);
+                });
+            }
+        }
+
+        function toggleIngredient(id) {
+            const index = selectedIngredientsForCooking.indexOf(id);
+            if (index > -1) {
+                selectedIngredientsForCooking.splice(index, 1);
+            } else {
+                selectedIngredientsForCooking.push(id);
+            }
+            renderKitchen();
+        }
+
+        // 6. Приготовление блюда
+        window.cookDish = function() {
+            const dishName = document.getElementById('dishNameInput').value.trim();
+            
+            if (!dishName) {
+                showToast('Введите название блюда', 'warning');
+                return;
+            }
+            
+            if (selectedIngredientsForCooking.length === 0) {
+                showToast('Выберите хотя бы один ингредиент', 'warning');
+                return;
+            }
+            
+            // Рассчитываем цену (сумма цен ингредиентов * 1.5)
+            let totalCost = 0;
+            const ingredientNames = [];
+            
+            selectedIngredientsForCooking.forEach(id => {
+                const item = db.find(p => p.id == id);
+                totalCost += item.price;
+                ingredientNames.push(item.name);
+                
+                // Удаляем использованный ингредиент из инвентаря
+                delete inventory[id];
+            });
+            
+            const dishPrice = Math.round(totalCost * 1.5);
+            
+            const newDish = {
+                name: dishName,
+                ingredients: [...selectedIngredientsForCooking],
+                ingredientNames: ingredientNames,
+                price: dishPrice,
+                status: 'available', // available, on_sale, sold, stolen
+                createdAt: Date.now()
+            };
+            
+            myDishes.push(newDish);
+            selectedIngredientsForCooking = [];
+            document.getElementById('dishNameInput').value = '';
+            
+            tg.HapticFeedback.notificationOccurred('success');
+            showToast(`Блюдо "${dishName}" приготовлено!`, 'success');
+            renderKitchen();
+        }
+
+        // 7. Продажа блюда
+        window.sellDish = function(index) {
+            const dish = myDishes[index];
+            dish.status = 'on_sale';
+            renderKitchen();
+            
+            showToast('Блюдо выставлено на продажу!', 'success');
+            
+            // ИИ покупатель/вор (через 3-7 секунд)
+            const waitTime = 3000 + Math.random() * 4000;
+            
+            setTimeout(() => {
+                const random = Math.random();
+                
+                // 70% шанс купить, 10% шанс украсть, 20% ничего не произошло
+                if (random < 0.7) {
+                    // Покупка
+                    dish.status = 'sold';
+                    userMoney += dish.price;
+                    updateBalance();
+                    showNotification('💰', 'Продано!', `Ваше блюдо "${dish.name}" купили за ${dish.price} ₽`);
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else if (random < 0.8) {
+                    // Кража
+                    dish.status = 'stolen';
+                    showNotification('🚨', 'Ограблено!', `Ваше блюдо "${dish.name}" украли!`);
+                    tg.HapticFeedback.notificationOccurred('error');
+                } else {
+                    // Вернуть обратно
+                    dish.status = 'available';
+                    showToast('Никто не купил. Попробуйте еще раз', 'warning');
+                }
+                
+                renderKitchen();
+            }, waitTime);
+        }
+
+        // 8. Логика Корзины
         function addItem(id) {
-            // Вибрация (Haptic Feedback)
             tg.HapticFeedback.impactOccurred('medium');
 
             if (!cart[id]) cart[id] = 0;
             cart[id]++;
             
-            // Обновляем UI без перерисовки всего списка (оптимизация)
             updateCardState(id);
             updateMainButton();
             
-            if (cart[id] === 1) showToast('Добавлено в корзину');
+            if (cart[id] === 1) showToast('Добавлено в корзину', 'success');
         }
 
         function minusItem(id) {
@@ -412,14 +892,12 @@
             updateMainButton();
         }
 
-        // Обновление конкретной карточки
         function updateCardState(id) {
             const count = cart[id] || 0;
             const addBtn = document.getElementById(`add-${id}`);
             const counter = document.getElementById(`counter-${id}`);
             const val = document.getElementById(`val-${id}`);
 
-            // Если элементы есть в DOM (мы в нужной категории)
             if (addBtn && counter && val) {
                 if (count > 0) {
                     addBtn.style.display = 'none';
@@ -432,26 +910,23 @@
             }
         }
 
-        // 6. Категории
+        // 9. Категории
         window.setCategory = (cat, btnElement) => {
-            // Вибрация смены табов
             tg.HapticFeedback.selectionChanged();
 
             currentCat = cat;
             
-            // Смена активной кнопки
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btnElement.classList.add('active');
 
             render();
         }
 
-        // 7. Main Button (Главная кнопка снизу)
+        // 10. Main Button
         function updateMainButton() {
             let totalSum = 0;
             let totalItems = 0;
 
-            // Считаем сумму
             for (const [id, qty] of Object.entries(cart)) {
                 const product = db.find(p => p.id == id);
                 if (product) {
@@ -461,54 +936,132 @@
             }
 
             if (totalSum > 0) {
-                tg.MainButton.setText(`Оформить заказ: ${totalSum} ₽`);
-                tg.MainButton.show();
-                tg.MainButton.enable();
-                tg.MainButton.setParams({
-                    color: '#2481cc', // Цвет кнопки
-                    text_color: '#ffffff'
-                });
+                if (totalSum > userMoney) {
+                    tg.MainButton.setText(`Недостаточно средств (${totalSum} ₽)`);
+                    tg.MainButton.show();
+                    tg.MainButton.disable();
+                    tg.MainButton.setParams({
+                        color: '#999999',
+                        text_color: '#ffffff'
+                    });
+                } else {
+                    tg.MainButton.setText(`Купить: ${totalSum} ₽`);
+                    tg.MainButton.show();
+                    tg.MainButton.enable();
+                    tg.MainButton.setParams({
+                        color: '#30d158',
+                        text_color: '#ffffff'
+                    });
+                }
             } else {
                 tg.MainButton.hide();
             }
         }
 
-        // Обработка клика по MainButton
+        // Обработка покупки
         tg.MainButton.onClick(() => {
-            // Формируем чек
-            let orderList = [];
-            let total = 0;
+            let totalSum = 0;
+            const purchasedItems = [];
 
             for (const [id, qty] of Object.entries(cart)) {
                 const product = db.find(p => p.id == id);
                 if (product) {
-                    orderList.push(`${product.name} x${qty} = ${product.price * qty}₽`);
-                    total += product.price * qty;
+                    totalSum += product.price * qty;
+                    purchasedItems.push({
+                        id: product.id,
+                        name: product.name,
+                        qty: qty,
+                        price: product.price
+                    });
                 }
             }
 
-            const dataToSend = {
-                order_id: Math.floor(Math.random() * 100000),
-                total_price: total,
-                items: orderList,
-                user: tg.initDataUnsafe.user
-            };
+            if (totalSum > userMoney) {
+                showToast('Недостаточно средств!', 'error');
+                return;
+            }
 
-            // Отправляем данные боту (как строку JSON)
-            tg.sendData(JSON.stringify(dataToSend));
+            // Списываем деньги
+            userMoney -= totalSum;
+            updateBalance();
+
+            // Добавляем товары в инвентарь
+            purchasedItems.forEach(item => {
+                if (!inventory[item.id]) {
+                    inventory[item.id] = {
+                        purchaseDate: Date.now(),
+                        quantity: item.qty
+                    };
+                } else {
+                    inventory[item.id].quantity += item.qty;
+                }
+            });
+
+            // Очищаем корзину
+            cart = {};
+            updateMainButton();
+
+            // Показываем уведомление
+            const itemsList = purchasedItems.map(i => `${i.name} x${i.qty}`).join(', ');
+            showNotification('🎉', 'Покупка успешна!', `Вы купили: ${itemsList}. Списано: ${totalSum} ₽`);
+            
+            tg.HapticFeedback.notificationOccurred('success');
+
+            // Обновляем отображение
+            render();
         });
 
-        // 8. Вспомогательные функции
-        function showToast(msg) {
+        // 11. Функции уведомлений
+        function showToast(msg, type = 'success') {
             const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            toast.className = 'toast';
+            
+            if (type === 'success') {
+                toastIcon.innerText = '✅';
+                toast.classList.add('success');
+            } else if (type === 'error') {
+                toastIcon.innerText = '❌';
+                toast.classList.add('error');
+            } else if (type === 'warning') {
+                toastIcon.innerText = '⚠️';
+                toast.classList.add('warning');
+            }
+            
+            toastMsg.innerText = msg;
             toast.classList.add('visible');
+            
             setTimeout(() => {
                 toast.classList.remove('visible');
             }, 2000);
         }
 
-        // Имитация загрузки
+        function showNotification(icon, title, message) {
+            const modal = document.getElementById('notificationModal');
+            document.getElementById('notifIcon').innerText = icon;
+            document.getElementById('notifTitle').innerText = title;
+            document.getElementById('notifMessage').innerText = message;
+            modal.classList.add('show');
+        }
+
+        window.closeNotification = function() {
+            document.getElementById('notificationModal').classList.remove('show');
+        }
+
+        function updateBalance() {
+            document.getElementById('userBalance').innerText = `${userMoney} ₽`;
+        }
+
+        // 12. Проверка сроков годности (каждые 10 секунд)
+        setInterval(() => {
+            if (currentCat !== 'kitchen') {
+                render(); // Обновляем товары для отображения актуальных сроков
+            }
+        }, 10000);
+
+        // Загрузка
         window.onload = () => {
             setTimeout(() => {
                 document.getElementById('loader').style.opacity = '0';
@@ -516,7 +1069,8 @@
                     document.getElementById('loader').style.display = 'none';
                 }, 300);
             }, 800);
-            render(); // Первый рендер
+            render();
+            updateBalance();
         };
 
     </script>
