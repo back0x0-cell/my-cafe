@@ -135,6 +135,10 @@
         .container {
             padding: 16px;
             padding-bottom: 100px;
+            transition: opacity 0.2s ease;
+        }
+        .container.transitioning {
+            opacity: 0.7;
         }
         .grid {
             display: grid;
@@ -287,6 +291,10 @@
         /* --- КУХНЯ --- */
         .kitchen-container {
             padding: 16px;
+            transition: opacity 0.2s ease;
+        }
+        .kitchen-container.transitioning {
+            opacity: 0.7;
         }
         
         .kitchen-section {
@@ -487,6 +495,30 @@
             cursor: pointer;
         }
 
+        /* Индикатор свайпа */
+        .swipe-hint {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: var(--tg-hint);
+            background: rgba(0,0,0,0.05);
+            padding: 6px 14px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        .swipe-hint.show {
+            opacity: 1;
+        }
+        .swipe-hint::before {
+            content: '← Свайп →';
+        }
+
     </style>
 </head>
 <body>
@@ -498,6 +530,8 @@
     <div id="toast" class="toast">
         <span id="toast-icon">✅</span> <span id="toast-msg">Товар добавлен</span>
     </div>
+
+    <div class="swipe-hint" id="swipeHint"></div>
 
     <!-- Модальное окно уведомлений -->
     <div id="notificationModal" class="notification-modal">
@@ -614,15 +648,29 @@
         const kitchenContainer = document.getElementById('kitchenContainer');
 
         function render() {
-            if (currentCat === 'kitchen') {
-                mainContainer.style.display = 'none';
-                kitchenContainer.style.display = 'block';
-                renderKitchen();
-                return;
-            }
+            // Добавляем эффект перехода
+            mainContainer.classList.add('transitioning');
+            kitchenContainer.classList.add('transitioning');
+            
+            setTimeout(() => {
+                if (currentCat === 'kitchen') {
+                    mainContainer.style.display = 'none';
+                    kitchenContainer.style.display = 'block';
+                    renderKitchen();
+                } else {
+                    mainContainer.style.display = 'block';
+                    kitchenContainer.style.display = 'none';
+                    renderProducts();
+                }
+                
+                setTimeout(() => {
+                    mainContainer.classList.remove('transitioning');
+                    kitchenContainer.classList.remove('transitioning');
+                }, 50);
+            }, 100);
+        }
 
-            mainContainer.style.display = 'block';
-            kitchenContainer.style.display = 'none';
+        function renderProducts() {
             grid.innerHTML = '';
             
             const filtered = currentCat === 'all' 
@@ -911,16 +959,93 @@
         }
 
         // 9. Категории
+        const categories = ['all', 'burgers', 'pizza', 'sushi', 'drinks', 'tech', 'kitchen'];
+        let currentCategoryIndex = 0;
+
         window.setCategory = (cat, btnElement) => {
             tg.HapticFeedback.selectionChanged();
 
             currentCat = cat;
+            currentCategoryIndex = categories.indexOf(cat);
             
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btnElement.classList.add('active');
+            if (btnElement) {
+                btnElement.classList.add('active');
+            } else {
+                // Если кнопка не передана (при свайпе), находим её
+                const tabs = document.querySelectorAll('.tab');
+                tabs[currentCategoryIndex].classList.add('active');
+            }
 
             render();
+            
+            // Прокручиваем к активной вкладке
+            scrollToActiveTab();
         }
+
+        function scrollToActiveTab() {
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) {
+                activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+
+        // 9.1 Свайп для переключения категорий
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let touchEndY = 0;
+        const swipeThreshold = 75; // Минимальное расстояние для свайпа
+        let hasShownSwipeHint = false;
+
+        function handleSwipe() {
+            const swipeDistanceX = touchEndX - touchStartX;
+            const swipeDistanceY = Math.abs(touchEndY - touchStartY);
+            
+            // Проверяем что это горизонтальный свайп (не вертикальная прокрутка)
+            if (swipeDistanceY < 100 && Math.abs(swipeDistanceX) > swipeThreshold) {
+                if (swipeDistanceX > 0 && currentCategoryIndex > 0) {
+                    // Свайп вправо - предыдущая категория
+                    currentCategoryIndex--;
+                    setCategory(categories[currentCategoryIndex]);
+                    tg.HapticFeedback.impactOccurred('light');
+                } else if (swipeDistanceX < 0 && currentCategoryIndex < categories.length - 1) {
+                    // Свайп влево - следующая категория
+                    currentCategoryIndex++;
+                    setCategory(categories[currentCategoryIndex]);
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            }
+        }
+
+        function showSwipeHint() {
+            if (!hasShownSwipeHint) {
+                const hint = document.getElementById('swipeHint');
+                hint.classList.add('show');
+                hasShownSwipeHint = true;
+                
+                setTimeout(() => {
+                    hint.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Добавляем обработчики свайпа на контейнер
+        const container = document.getElementById('mainContainer');
+        const kitchenCont = document.getElementById('kitchenContainer');
+
+        [container, kitchenCont].forEach(cont => {
+            cont.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, { passive: true });
+
+            cont.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+            }, { passive: true });
+        });
 
         // 10. Main Button
         function updateMainButton() {
@@ -1067,6 +1192,8 @@
                 document.getElementById('loader').style.opacity = '0';
                 setTimeout(() => {
                     document.getElementById('loader').style.display = 'none';
+                    // Показываем подсказку о свайпе
+                    setTimeout(() => showSwipeHint(), 1000);
                 }, 300);
             }, 800);
             render();
