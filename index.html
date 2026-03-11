@@ -1,705 +1,553 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SuperApp - Telegram Mini App</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Кастомные анимации и стили */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes clickAnimation {
-            0% { transform: scale(1) translateY(0); opacity: 1; }
-            100% { transform: scale(1.5) translateY(-50px); opacity: 0; }
-        }
-        
-        .fade-in { animation: fadeIn 0.5s ease-out; }
-        .slide-up { animation: slideUp 0.4s ease-out; }
-        .pulse { animation: pulse 2s ease-in-out infinite; }
-        .float { animation: float 3s ease-in-out infinite; }
-        
-        .click-number {
-            position: absolute;
-            font-size: 24px;
-            font-weight: bold;
-            pointer-events: none;
-            animation: clickAnimation 1s ease-out forwards;
-        }
-        
-        /* Адаптивная цветовая схема */
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f7f7f7;
-            --text-primary: #000000;
-            --text-secondary: #6b7280;
-            --accent: #2481cc;
-            --border: #e5e7eb;
-        }
-        
-        body.dark {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2d2d2d;
-            --text-primary: #ffffff;
-            --text-secondary: #9ca3af;
-            --accent: #3b82f6;
-            --border: #374151;
-        }
-        
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            transition: background-color 0.3s, color 0.3s;
-        }
-        
-        .bg-primary { background-color: var(--bg-primary); }
-        .bg-secondary { background-color: var(--bg-secondary); }
-        .text-primary { color: var(--text-primary); }
-        .text-secondary { color: var(--text-secondary); }
-        .border-custom { border-color: var(--border); }
-        .accent { color: var(--accent); }
-        .bg-accent { background-color: var(--accent); }
-        
-        /* Скрытие полос прокрутки */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Стили для калькулятора */
-        .calc-display {
-            font-family: 'Courier New', monospace;
-            font-size: 2rem;
-            min-height: 80px;
-        }
-        
-        /* Кнопка кликера */
-        .clicker-btn {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            transition: transform 0.1s;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .clicker-btn:active {
-            transform: scale(0.95);
-        }
-        
-        /* Нижняя навигация */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
-            background-color: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-            height: 100%;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: var(--text-secondary);
-        }
-        
-        .nav-item.active {
-            color: var(--accent);
-        }
-        
-        .nav-item:active {
-            transform: scale(0.95);
-        }
-        
-        /* Контент с учетом нижней навигации */
-        .content {
-            padding-bottom: 90px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Счётчик отсутствия</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --panel: #11111a;
+      --border: #1e1e2e;
+      --accent: #ff3c5f;
+      --accent2: #ff8c42;
+      --text: #e8e8f0;
+      --muted: #4a4a6a;
+      --green: #3cffa0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Фоновая сетка */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,60,95,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,60,95,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Свечение по центру */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(ellipse, rgba(255,60,95,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* Заголовок */
+    .title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 8vw, 6rem);
+      letter-spacing: 0.15em;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 60px;
+    }
+
+    /* Основная карточка */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 40px 60px;
+      position: relative;
+      min-width: 380px;
+      box-shadow: 0 0 60px rgba(255,60,95,0.05), inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    /* Угловые декоры */
+    .card::before, .card::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      border-color: var(--accent);
+      border-style: solid;
+    }
+    .card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+    .card::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+    /* Статус-индикатор */
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      transition: background 0.4s, box-shadow 0.4s;
+    }
+    .dot.away {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.7; }
+    }
+
+    .status-text {
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.4s;
+    }
+    .status-text.away { color: var(--accent); }
+
+    /* Большой таймер */
+    .timer-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .timer-display {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 15vw, 8rem);
+      letter-spacing: 0.05em;
+      line-height: 1;
+      color: var(--text);
+      transition: color 0.4s;
+      margin-bottom: 8px;
+    }
+    .timer-display.away { color: var(--accent); }
+    .timer-display.away { text-shadow: 0 0 40px rgba(255,60,95,0.4); }
+
+    .timer-sub {
+      font-size: 0.55rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+    }
+
+    /* Разделитель */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 30px 0;
+    }
+
+    /* Статистика */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.05em;
+      color: var(--accent2);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* Лог событий */
+    .log-section {
+      margin-top: 40px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .log-header {
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+      text-transform: uppercase;
+      text-align: left;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-header::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .log-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .log-list::-webkit-scrollbar { width: 2px; }
+    .log-list::-webkit-scrollbar-track { background: transparent; }
+    .log-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .log-item {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.01);
+      border-left: 2px solid var(--border);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .log-item.leave { border-left-color: var(--accent); }
+    .log-item.return { border-left-color: var(--green); }
+
+    .log-time { color: var(--muted); min-width: 55px; }
+    .log-event { flex: 1; }
+    .log-duration { color: var(--accent2); }
+
+    /* Защита от копирования */
+    * {
+      -webkit-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+      user-select: none !important;
+    }
+
+    /* Счётчик посетителей */
+    .visitors-section {
+      margin-top: 24px;
+      text-align: center;
+    }
+    .visitors-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .visitors-count {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      letter-spacing: 0.1em;
+      color: var(--green);
+      text-shadow: 0 0 20px rgba(60,255,160,0.3);
+    }
+
+    /* Кнопка сброса */
+    .reset-btn {
+      margin-top: 30px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 2px;
+    }
+
+    .reset-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(255,60,95,0.05);
+    }
+
+    /* Оверлей "ушёл" */
+    .away-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,60,95,0.03);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 5;
+    }
+    .away-overlay.active { opacity: 1; }
+
+    /* Заголовок вкладки - индикатор */
+    .tab-notice {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      z-index: 20;
+    }
+  </style>
 </head>
 <body>
-    <!-- Основной контейнер -->
-    <div id="app" class="min-h-screen">
-        <!-- Заголовок -->
-        <header class="sticky top-0 z-50 bg-secondary border-b border-custom px-4 py-3">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl">⚡</span>
-                    <h1 class="text-xl font-bold">SuperApp</h1>
-                </div>
-                <div id="userAvatar" class="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white font-bold">
-                    U
-                </div>
-            </div>
-        </header>
 
-        <!-- Контент страниц -->
-        <main class="content px-4 py-6">
-            <!-- Главная страница -->
-            <div id="page-home" class="page-content">
-                <div class="fade-in space-y-6">
-                    <div class="text-center mb-8">
-                        <h2 class="text-3xl font-bold mb-2">Добро пожаловать! 👋</h2>
-                        <p class="text-secondary">Ваш умный помощник в Telegram</p>
-                    </div>
+  <div class="away-overlay" id="awayOverlay"></div>
+  <div class="tab-notice">// VISIBILITY TRACKER v1.0</div>
 
-                    <!-- Быстрые действия -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-secondary rounded-2xl p-6 text-center cursor-pointer hover:opacity-80 transition" onclick="switchPage('calculator')">
-                            <div class="text-4xl mb-2">🧮</div>
-                            <div class="font-semibold">Калькулятор</div>
-                        </div>
-                        <div class="bg-secondary rounded-2xl p-6 text-center cursor-pointer hover:opacity-80 transition" onclick="switchPage('tools')">
-                            <div class="text-4xl mb-2">🛠️</div>
-                            <div class="font-semibold">Инструменты</div>
-                        </div>
-                        <div class="bg-secondary rounded-2xl p-6 text-center cursor-pointer hover:opacity-80 transition" onclick="switchPage('stats')">
-                            <div class="text-4xl mb-2">📊</div>
-                            <div class="font-semibold">Статистика</div>
-                        </div>
-                        <div class="bg-secondary rounded-2xl p-6 text-center cursor-pointer hover:opacity-80 transition" onclick="switchPage('settings')">
-                            <div class="text-4xl mb-2">⚙️</div>
-                            <div class="font-semibold">Настройки</div>
-                        </div>
-                    </div>
+  <div class="container">
+    <div class="title">AWAY TIME</div>
+    <div class="subtitle">// мониторинг присутствия пользователя</div>
 
-                    <!-- Инфо-панель -->
-                    <div class="bg-secondary rounded-2xl p-6">
-                        <h3 class="text-lg font-bold mb-4">📅 Информация</h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-secondary">Сейчас:</span>
-                                <span class="font-semibold" id="currentTime">--:--</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-secondary">День недели:</span>
-                                <span class="font-semibold" id="currentDay">---</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-secondary">До выходных:</span>
-                                <span class="font-semibold" id="daysToWeekend">---</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-secondary">Батарея:</span>
-                                <span class="font-semibold" id="batteryLevel">🔋 ---%</span>
-                            </div>
-                        </div>
-                    </div>
+    <div class="card">
+      <div class="status-row">
+        <div class="dot" id="statusDot"></div>
+        <div class="status-text" id="statusText">НА САЙТЕ</div>
+      </div>
 
-                    <!-- Игровой элемент - Кликер -->
-                    <div class="bg-secondary rounded-2xl p-6 text-center">
-                        <h3 class="text-lg font-bold mb-4">🎮 Кликер</h3>
-                        <div class="relative inline-block">
-                            <button id="clickerBtn" class="clicker-btn bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-2xl">
-                                <div id="clickCount" class="pulse">0</div>
-                            </button>
-                        </div>
-                        <p class="text-secondary mt-4">Нажми на круг!</p>
-                    </div>
-                </div>
-            </div>
+      <div class="timer-label">// время отсутствия</div>
+      <div class="timer-display" id="timerDisplay">00:00</div>
+      <div class="timer-sub">ЧЧ:ММ:СС</div>
 
-            <!-- Страница Инструменты -->
-            <div id="page-tools" class="page-content hidden">
-                <div class="fade-in space-y-6">
-                    <h2 class="text-2xl font-bold mb-6">🛠️ Инструменты</h2>
+      <div class="divider"></div>
 
-                    <!-- Умный калькулятор -->
-                    <div class="bg-secondary rounded-2xl p-6" id="calculator">
-                        <h3 class="text-lg font-bold mb-4">🧮 Умный Калькулятор</h3>
-                        <input 
-                            type="text" 
-                            id="calcInput" 
-                            class="w-full bg-primary text-primary border border-custom rounded-xl px-4 py-3 mb-4 text-lg"
-                            placeholder="Введите выражение (например: 2 + 2 * 5)"
-                        />
-                        <div class="calc-display bg-primary border border-custom rounded-xl px-4 py-6 mb-4 text-center font-bold">
-                            <div id="calcResult" class="accent">= 0</div>
-                        </div>
-                        <div class="text-xs text-secondary">
-                            Поддерживаются: +, -, *, /, ^ (степень), sqrt() (корень), скобки
-                        </div>
-                    </div>
-
-                    <!-- Анализатор текста -->
-                    <div class="bg-secondary rounded-2xl p-6">
-                        <h3 class="text-lg font-bold mb-4">📝 Анализатор Текста</h3>
-                        <textarea 
-                            id="textInput" 
-                            class="w-full bg-primary text-primary border border-custom rounded-xl px-4 py-3 mb-4 h-32 resize-none"
-                            placeholder="Вставьте текст для анализа..."
-                        ></textarea>
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div class="bg-primary rounded-xl p-4 text-center">
-                                <div class="text-2xl font-bold accent" id="charCount">0</div>
-                                <div class="text-xs text-secondary">Символов</div>
-                            </div>
-                            <div class="bg-primary rounded-xl p-4 text-center">
-                                <div class="text-2xl font-bold accent" id="charNoSpaceCount">0</div>
-                                <div class="text-xs text-secondary">Без пробелов</div>
-                            </div>
-                            <div class="bg-primary rounded-xl p-4 text-center">
-                                <div class="text-2xl font-bold accent" id="wordCount">0</div>
-                                <div class="text-xs text-secondary">Слов</div>
-                            </div>
-                            <div class="bg-primary rounded-xl p-4 text-center">
-                                <div class="text-2xl font-bold accent" id="uniqueWordCount">0</div>
-                                <div class="text-xs text-secondary">Уникальных</div>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="clearText()" class="flex-1 bg-red-500 text-white rounded-xl py-3 font-semibold">
-                                Очистить
-                            </button>
-                            <button onclick="copyResult()" class="flex-1 bg-accent text-white rounded-xl py-3 font-semibold">
-                                Скопировать
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Страница Статистика -->
-            <div id="page-stats" class="page-content hidden">
-                <div class="fade-in space-y-6">
-                    <h2 class="text-2xl font-bold mb-6">📊 Статистика</h2>
-
-                    <!-- Данные пользователя Telegram -->
-                    <div class="bg-secondary rounded-2xl p-6">
-                        <h3 class="text-lg font-bold mb-4">👤 Ваши данные Telegram</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center gap-4">
-                                <div id="userPhoto" class="w-16 h-16 rounded-full bg-accent flex items-center justify-center text-white text-2xl font-bold">
-                                    U
-                                </div>
-                                <div class="flex-1">
-                                    <div class="font-bold text-lg" id="userName">Имя пользователя</div>
-                                    <div class="text-secondary text-sm" id="userUsername">@username</div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-primary rounded-xl p-4">
-                                    <div class="text-xs text-secondary mb-1">User ID</div>
-                                    <div class="font-bold" id="userId">---</div>
-                                </div>
-                                <div class="bg-primary rounded-xl p-4">
-                                    <div class="text-xs text-secondary mb-1">Язык</div>
-                                    <div class="font-bold" id="userLang">---</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Haptic Feedback тест -->
-                    <div class="bg-secondary rounded-2xl p-6">
-                        <h3 class="text-lg font-bold mb-4">📳 Haptic Feedback</h3>
-                        <div class="grid grid-cols-3 gap-3">
-                            <button onclick="hapticImpact('light')" class="bg-primary rounded-xl py-4 font-semibold hover:opacity-80">
-                                Light
-                            </button>
-                            <button onclick="hapticImpact('medium')" class="bg-primary rounded-xl py-4 font-semibold hover:opacity-80">
-                                Medium
-                            </button>
-                            <button onclick="hapticImpact('heavy')" class="bg-primary rounded-xl py-4 font-semibold hover:opacity-80">
-                                Heavy
-                            </button>
-                            <button onclick="hapticNotification('success')" class="bg-green-500 text-white rounded-xl py-4 font-semibold col-span-3">
-                                Success
-                            </button>
-                            <button onclick="hapticNotification('warning')" class="bg-yellow-500 text-white rounded-xl py-4 font-semibold col-span-3">
-                                Warning
-                            </button>
-                            <button onclick="hapticNotification('error')" class="bg-red-500 text-white rounded-xl py-4 font-semibold col-span-3">
-                                Error
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Статистика кликера -->
-                    <div class="bg-secondary rounded-2xl p-6">
-                        <h3 class="text-lg font-bold mb-4">🎮 Статистика Кликера</h3>
-                        <div class="text-center">
-                            <div class="text-5xl font-bold accent mb-2" id="totalClicks">0</div>
-                            <div class="text-secondary">Всего кликов</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Страница Настройки -->
-            <div id="page-settings" class="page-content hidden">
-                <div class="fade-in space-y-6">
-                    <h2 class="text-2xl font-bold mb-6">⚙️ Настройки</h2>
-
-                    <div class="bg-secondary rounded-2xl p-6">
-                        <h3 class="text-lg font-bold mb-4">Тема оформления</h3>
-                        <div class="flex items-center justify-between">
-                            <span>Текущая тема:</span>
-                            <span class="font-bold" id="currentTheme">Светлая</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-secondary rounded-2xl p-6">
-                        <h3 class="text-lg font-bold mb-4">О приложении</h3>
-                        <div class="space-y-2 text-secondary">
-                            <p>Версия: 1.0.0</p>
-                            <p>Разработано для Telegram Mini Apps</p>
-                            <p>Все данные хранятся локально</p>
-                        </div>
-                    </div>
-
-                    <button onclick="resetApp()" class="w-full bg-red-500 text-white rounded-xl py-4 font-semibold">
-                        Сбросить все данные
-                    </button>
-                </div>
-            </div>
-        </main>
-
-        <!-- Нижняя навигация -->
-        <nav class="bottom-nav">
-            <div class="nav-item active" onclick="switchPage('home')" data-page="home">
-                <div class="text-2xl">🏠</div>
-                <div class="text-xs mt-1">Главная</div>
-            </div>
-            <div class="nav-item" onclick="switchPage('tools')" data-page="tools">
-                <div class="text-2xl">🛠️</div>
-                <div class="text-xs mt-1">Инструменты</div>
-            </div>
-            <div class="nav-item" onclick="switchPage('stats')" data-page="stats">
-                <div class="text-2xl">📊</div>
-                <div class="text-xs mt-1">Статистика</div>
-            </div>
-            <div class="nav-item" onclick="switchPage('settings')" data-page="settings">
-                <div class="text-2xl">⚙️</div>
-                <div class="text-xs mt-1">Настройки</div>
-            </div>
-        </nav>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-value" id="countStat">0</div>
+          <div class="stat-label">уходов</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="totalStat">00:00</div>
+          <div class="stat-label">всего</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="maxStat">00:00</div>
+          <div class="stat-label">макс раз</div>
+        </div>
+      </div>
     </div>
 
-    <script>
-        /**
-         * ИНИЦИАЛИЗАЦИЯ TELEGRAM WEB APP SDK
-         * Подключаем SDK и настраиваем базовые параметры приложения
-         */
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+    <div class="log-section">
+      <div class="log-header">// журнал событий</div>
+      <ul class="log-list" id="logList">
+        <li class="log-item">
+          <span class="log-time" id="startTime">--:--:--</span>
+          <span class="log-event">сессия начата</span>
+        </li>
+      </ul>
+    </div>
 
-        // Устанавливаем цвета приложения в соответствии с темой Telegram
-        const colorScheme = tg.colorScheme || 'light';
-        if (colorScheme === 'dark') {
-            document.body.classList.add('dark');
-            document.getElementById('currentTheme').textContent = 'Темная';
-        }
+    <button class="reset-btn" onclick="resetAll()">↺ сбросить статистику</button>
 
-        /**
-         * УПРАВЛЕНИЕ НАВИГАЦИЕЙ
-         * Функция переключения между страницами приложения
-         */
-        function switchPage(pageName) {
-            // Вибрация при переключении
-            tg.HapticFeedback.selectionChanged();
+    <div class="visitors-section">
+      <div class="visitors-label">// всего посетителей сайта</div>
+      <div class="visitors-count" id="visitorsCount">—</div>
+    </div>
+  </div>
 
-            // Скрываем все страницы
-            document.querySelectorAll('.page-content').forEach(page => {
-                page.classList.add('hidden');
-            });
+  <script>
+    // === Состояние ===
+    let isAway = false;
+    let awayStart = null;
+    let currentTick = 0;
+    let tickInterval = null;
 
-            // Показываем нужную страницу
-            document.getElementById(`page-${pageName}`).classList.remove('hidden');
+    let totalAwayMs = 0;
+    let maxAwayMs = 0;
+    let awayCount = 0;
 
-            // Обновляем активный пункт меню
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
-        }
+    // Элементы
+    const dot        = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const timerEl    = document.getElementById('timerDisplay');
+    const overlay    = document.getElementById('awayOverlay');
+    const countEl   = document.getElementById('countStat');
+    const totalEl   = document.getElementById('totalStat');
+    const maxEl     = document.getElementById('maxStat');
+    const logList   = document.getElementById('logList');
 
-        /**
-         * МОДУЛЬ: УМНЫЙ КАЛЬКУЛЯТОР
-         * Парсинг и вычисление математических выражений в реальном времени
-         */
-        const calcInput = document.getElementById('calcInput');
-        const calcResult = document.getElementById('calcResult');
+    // Время начала сессии
+    document.getElementById('startTime').textContent = nowStr();
 
-        calcInput.addEventListener('input', function() {
-            calculateExpression(this.value);
-        });
+    function nowStr() {
+      return new Date().toLocaleTimeString('ru-RU');
+    }
 
-        function calculateExpression(expression) {
-            try {
-                // Заменяем ^ на ** для возведения в степень
-                let processed = expression.replace(/\^/g, '**');
-                
-                // Обрабатываем функцию sqrt()
-                processed = processed.replace(/sqrt\(([^)]+)\)/g, 'Math.sqrt($1)');
-                
-                // Проверяем на безопасность (только цифры и разрешенные символы)
-                if (/[a-zA-Z]/.test(processed.replace(/Math\.sqrt/g, '').replace(/sqrt/g, ''))) {
-                    throw new Error('Недопустимые символы');
-                }
-                
-                // Вычисляем результат
-                const result = eval(processed);
-                
-                // Проверяем на NaN и Infinity
-                if (isNaN(result) || !isFinite(result)) {
-                    throw new Error('Ошибка вычисления');
-                }
-                
-                // Округляем до 6 знаков после запятой
-                calcResult.textContent = '= ' + (Math.round(result * 1000000) / 1000000);
-                calcResult.style.color = '';
-            } catch (error) {
-                calcResult.textContent = '❌ Ошибка';
-                calcResult.style.color = '#ef4444';
-            }
-        }
+    function msToDisplay(ms) {
+      const s = Math.floor(ms / 1000);
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      if (h > 0) return `${pad(h)}:${pad(m)}:${pad(sec)}`;
+      return `${pad(m)}:${pad(sec)}`;
+    }
 
-        /**
-         * МОДУЛЬ: АНАЛИЗАТОР ТЕКСТА
-         * Подсчет символов, слов и уникальных слов в реальном времени
-         */
-        const textInput = document.getElementById('textInput');
+    function pad(n) { return String(n).padStart(2, '0'); }
 
-        textInput.addEventListener('input', function() {
-            analyzeText(this.value);
-        });
+    function addLog(type, text, extra) {
+      const li = document.createElement('li');
+      li.className = `log-item ${type}`;
+      li.innerHTML = `<span class="log-time">${nowStr()}</span>
+                      <span class="log-event">${text}</span>
+                      ${extra ? `<span class="log-duration">${extra}</span>` : ''}`;
+      logList.prepend(li);
+      // Оставляем только 20 последних
+      while (logList.children.length > 20) logList.removeChild(logList.lastChild);
+    }
 
-        function analyzeText(text) {
-            // Количество символов с пробелами
-            const charCount = text.length;
-            document.getElementById('charCount').textContent = charCount;
+    function startAway() {
+      if (isAway) return;
+      isAway = true;
+      awayStart = Date.now();
+      currentTick = 0;
 
-            // Количество символов без пробелов
-            const charNoSpace = text.replace(/\s/g, '').length;
-            document.getElementById('charNoSpaceCount').textContent = charNoSpace;
+      dot.classList.add('away');
+      statusText.textContent = 'ПОКИНУЛ САЙТ';
+      statusText.classList.add('away');
+      timerEl.classList.add('away');
+      overlay.classList.add('active');
 
-            // Количество слов
-            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-            document.getElementById('wordCount').textContent = words.length;
+      // Обновляем заголовок вкладки
+      const origTitle = document.title;
+      document.title = '⚠️ Пользователь ушёл...';
 
-            // Количество уникальных слов
-            const uniqueWords = new Set(words.map(w => w.toLowerCase()));
-            document.getElementById('uniqueWordCount').textContent = uniqueWords.size;
-        }
+      tickInterval = setInterval(() => {
+        currentTick = Date.now() - awayStart;
+        timerEl.textContent = msToDisplay(currentTick);
+        document.title = `⚠️ ${msToDisplay(currentTick)} — ушёл`;
+      }, 500);
 
-        function clearText() {
-            textInput.value = '';
-            analyzeText('');
-            tg.HapticFeedback.impactOccurred('medium');
-        }
+      addLog('leave', 'пользователь ушёл');
+    }
 
-        function copyResult() {
-            const stats = `
-Символов: ${document.getElementById('charCount').textContent}
-Без пробелов: ${document.getElementById('charNoSpaceCount').textContent}
-Слов: ${document.getElementById('wordCount').textContent}
-Уникальных: ${document.getElementById('uniqueWordCount').textContent}
-            `.trim();
+    function endAway() {
+      if (!isAway) return;
+      isAway = false;
 
-            navigator.clipboard.writeText(stats).then(() => {
-                tg.HapticFeedback.notificationOccurred('success');
-                tg.showAlert('Результат скопирован!');
-            });
-        }
+      clearInterval(tickInterval);
+      const duration = Date.now() - awayStart;
 
-        /**
-         * МОДУЛЬ: ИНФО-ПАНЕЛЬ
-         * Отображение текущей даты, времени, батареи
-         */
-        function updateDateTime() {
-            const now = new Date();
-            
-            // Текущее время
-            const time = now.toLocaleTimeString('ru-RU', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            document.getElementById('currentTime').textContent = time;
+      totalAwayMs += duration;
+      awayCount++;
+      if (duration > maxAwayMs) maxAwayMs = duration;
 
-            // День недели
-            const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-            const dayName = days[now.getDay()];
-            document.getElementById('currentDay').textContent = dayName;
+      // Обновляем статистику
+      countEl.textContent = awayCount;
+      totalEl.textContent = msToDisplay(totalAwayMs);
+      maxEl.textContent   = msToDisplay(maxAwayMs);
 
-            // Дни до выходных
-            const currentDay = now.getDay();
-            let daysToWeekend;
-            if (currentDay === 0 || currentDay === 6) {
-                daysToWeekend = 'Сегодня! 🎉';
-            } else {
-                daysToWeekend = (6 - currentDay) + ' дн.';
-            }
-            document.getElementById('daysToWeekend').textContent = daysToWeekend;
-        }
+      dot.classList.remove('away');
+      statusText.textContent = 'НА САЙТЕ';
+      statusText.classList.remove('away');
+      timerEl.classList.remove('away');
+      timerEl.textContent = msToDisplay(duration);
+      overlay.classList.remove('active');
+      document.title = 'Счётчик отсутствия';
 
-        // Обновляем каждую секунду
-        setInterval(updateDateTime, 1000);
-        updateDateTime();
+      addLog('return', 'вернулся на сайт', msToDisplay(duration));
 
-        // Battery Status API
-        if ('getBattery' in navigator) {
-            navigator.getBattery().then(battery => {
-                function updateBattery() {
-                    const level = Math.round(battery.level * 100);
-                    const charging = battery.charging ? '⚡' : '🔋';
-                    document.getElementById('batteryLevel').textContent = `${charging} ${level}%`;
-                }
-                
-                battery.addEventListener('levelchange', updateBattery);
-                battery.addEventListener('chargingchange', updateBattery);
-                updateBattery();
-            });
-        }
+      // Через 2 сек сбросить отображение таймера на 00:00
+      setTimeout(() => {
+        if (!isAway) timerEl.textContent = '00:00';
+      }, 3000);
+    }
 
-        /**
-         * МОДУЛЬ: TELEGRAM DATA
-         * Отображение данных текущего пользователя
-         */
-        function loadUserData() {
-            const user = tg.initDataUnsafe?.user;
-            
-            if (user) {
-                // Имя
-                const fullName = `${user.first_name} ${user.last_name || ''}`.trim();
-                document.getElementById('userName').textContent = fullName;
+    function resetAll() {
+      totalAwayMs = 0;
+      maxAwayMs = 0;
+      awayCount = 0;
+      countEl.textContent = '0';
+      totalEl.textContent = '00:00';
+      maxEl.textContent   = '00:00';
+      timerEl.textContent = '00:00';
+      logList.innerHTML = `<li class="log-item">
+        <span class="log-time">${nowStr()}</span>
+        <span class="log-event">статистика сброшена</span>
+      </li>`;
+    }
 
-                // Username
-                const username = user.username ? `@${user.username}` : 'Нет username';
-                document.getElementById('userUsername').textContent = username;
+    // === Счётчик посетителей (counterapi.dev) ===
+    async function loadVisitors() {
+      const el = document.getElementById('visitorsCount');
+      try {
+        const res = await fetch('https://api.counterapi.dev/v1/vasya-counter/moy-sayt/up');
+        const data = await res.json();
+        el.textContent = data.count.toLocaleString('ru-RU');
+      } catch(e) {
+        el.textContent = '—';
+      }
+    }
+    loadVisitors();
 
-                // ID
-                document.getElementById('userId').textContent = user.id;
+    // === Защита от копирования ===
+    ['copy', 'cut', 'contextmenu', 'selectstart', 'dragstart'].forEach(e => {
+      document.addEventListener(e, ev => ev.preventDefault());
+    });
 
-                // Язык
-                const lang = user.language_code?.toUpperCase() || 'RU';
-                document.getElementById('userLang').textContent = lang;
+    // === Page Visibility API ===
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        startAway();
+      } else {
+        endAway();
+      }
+    });
 
-                // Фото (если доступно через Telegram)
-                if (user.photo_url) {
-                    document.getElementById('userPhoto').innerHTML = `<img src="${user.photo_url}" class="w-full h-full object-cover rounded-full">`;
-                    document.getElementById('userAvatar').innerHTML = `<img src="${user.photo_url}" class="w-full h-full object-cover rounded-full">`;
-                } else {
-                    // Инициалы
-                    const initials = user.first_name[0] + (user.last_name ? user.last_name[0] : '');
-                    document.getElementById('userPhoto').textContent = initials;
-                    document.getElementById('userAvatar').textContent = initials;
-                }
-            }
-        }
-
-        loadUserData();
-
-        /**
-         * МОДУЛЬ: HAPTIC FEEDBACK
-         * Тестирование различных типов вибрации
-         */
-        function hapticImpact(style) {
-            tg.HapticFeedback.impactOccurred(style);
-        }
-
-        function hapticNotification(type) {
-            tg.HapticFeedback.notificationOccurred(type);
-        }
-
-        /**
-         * МОДУЛЬ: ИГРОВОЙ КЛИКЕР
-         * Счетчик нажатий с анимацией и сохранением в localStorage
-         */
-        let clickCount = parseInt(localStorage.getItem('clickCount') || '0');
-        document.getElementById('clickCount').textContent = clickCount;
-        document.getElementById('totalClicks').textContent = clickCount;
-
-        const clickerBtn = document.getElementById('clickerBtn');
-
-        clickerBtn.addEventListener('click', function(e) {
-            // Увеличиваем счетчик
-            clickCount++;
-            document.getElementById('clickCount').textContent = clickCount;
-            document.getElementById('totalClicks').textContent = clickCount;
-
-            // Сохраняем в localStorage
-            localStorage.setItem('clickCount', clickCount);
-
-            // Вибрация
-            tg.HapticFeedback.impactOccurred('light');
-
-            // Анимация числа в месте клика
-            const rect = clickerBtn.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const clickNum = document.createElement('div');
-            clickNum.className = 'click-number';
-            clickNum.textContent = '+1';
-            clickNum.style.left = x + 'px';
-            clickNum.style.top = y + 'px';
-            clickNum.style.color = '#ffffff';
-
-            clickerBtn.appendChild(clickNum);
-
-            // Удаляем элемент после анимации
-            setTimeout(() => clickNum.remove(), 1000);
-        });
-
-        /**
-         * МОДУЛЬ: НАСТРОЙКИ
-         * Сброс данных приложения
-         */
-        function resetApp() {
-            tg.showConfirm('Вы уверены, что хотите сбросить все данные?', (confirmed) => {
-                if (confirmed) {
-                    localStorage.clear();
-                    clickCount = 0;
-                    document.getElementById('clickCount').textContent = '0';
-                    document.getElementById('totalClicks').textContent = '0';
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert('Данные сброшены!');
-                }
-            });
-        }
-
-        /**
-         * УПРАВЛЕНИЕ MAIN BUTTON И BACK BUTTON
-         * Используем кнопки SDK для управления
-         */
-        
-        // Скрываем MainButton по умолчанию
-        tg.MainButton.hide();
-
-        // BackButton можно использовать для выхода на главную
-        tg.BackButton.onClick(() => {
-            switchPage('home');
-        });
-
-        console.log('✅ SuperApp загружен и готов к работе!');
-    </script>
+    // === Дополнительно: потеря фокуса окна ===
+    window.addEventListener('blur', startAway);
+    window.addEventListener('focus', endAway);
+  </script>
 </body>
 </html>
